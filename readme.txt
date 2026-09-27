@@ -79,7 +79,7 @@ Yes. Each block has its own setting, and **Settings › Word Counter** can turn 
 
 = I used the version from the Telex blog post. Will my counter break? =
 
-No. Counters made with that version keep working. In the editor, they show a **Convert** button that turns them into the current block.
+No. Counters made with that version keep working. In the editor they show your number like before, with a **Convert** button in the block toolbar that turns them into the current block.
 
 == Screenshots ==
 

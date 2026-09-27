@@ -9,26 +9,15 @@ import { PanelBody, SelectControl, ToggleControl } from '@wordpress/components';
  * Internal dependencies
  */
 import useTotal from './use-total';
+import CounterPreview from './counter-preview';
 import './editor.scss';
 
 export default function Edit( { attributes, setAttributes } ) {
 	const { enableAnimation, format } = attributes;
-	const {
-		formatted,
-		backfillComplete,
-		animationDisabled,
-		settingsUrl,
-		error,
-	} = useTotal();
+	const total = useTotal();
+	const { animationDisabled, settingsUrl } = total;
 
 	const blockProps = useBlockProps();
-
-	let number = '…';
-	if ( error ) {
-		number = __( 'Word count unavailable', 'site-word-counter' );
-	} else if ( formatted ) {
-		number = formatted[ format ] ?? formatted.full;
-	}
 
 	return (
 		<>
@@ -98,17 +87,7 @@ export default function Edit( { attributes, setAttributes } ) {
 			</InspectorControls>
 
 			<div { ...blockProps }>
-				<span className="wp-block-site-word-counter-site-word-counter__number">
-					{ number }
-				</span>
-				{ ! backfillComplete && (
-					<span className="wp-block-site-word-counter-site-word-counter__notice">
-						{ __(
-							'Still counting older posts',
-							'site-word-counter'
-						) }
-					</span>
-				) }
+				<CounterPreview format={ format } total={ total } />
 			</div>
 		</>
 	);

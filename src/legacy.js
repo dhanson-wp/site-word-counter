@@ -4,11 +4,24 @@
 import { __ } from '@wordpress/i18n';
 import { createBlock, registerBlockType } from '@wordpress/blocks';
 import {
+	BlockControls,
+	InspectorControls,
 	useBlockProps,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
-import { Button, Notice } from '@wordpress/components';
+import {
+	Button,
+	PanelBody,
+	ToolbarButton,
+	ToolbarGroup,
+} from '@wordpress/components';
 import { useDispatch } from '@wordpress/data';
+
+/**
+ * Internal dependencies
+ */
+import useTotal from './use-total';
+import CounterPreview from './counter-preview';
 
 export const LEGACY_NAME = 'telex/block-site-word-counter';
 const CURRENT_NAME = 'site-word-counter/site-word-counter';
@@ -41,34 +54,55 @@ export const legacyTransform = {
 
 function LegacyEdit( { attributes, clientId } ) {
 	const { replaceBlocks } = useDispatch( blockEditorStore );
-	const blockProps = useBlockProps();
+	const total = useTotal();
+
+	// Show the counter the way the site does: same number, same alignment.
+	const { textAlignment } = attributes;
+	const blockProps = useBlockProps( {
+		className:
+			textAlignment === 'center' || textAlignment === 'right'
+				? `has-text-align-${ textAlignment }`
+				: undefined,
+	} );
+
+	const convert = () =>
+		replaceBlocks(
+			clientId,
+			createBlock( CURRENT_NAME, mapLegacyAttributes( attributes ) )
+		);
 
 	return (
-		<div { ...blockProps }>
-			<Notice status="warning" isDismissible={ false }>
-				<p>
-					{ __(
-						'This counter was made with an earlier version of Site Word Counter. It still works on your site. Convert it to change its settings.',
-						'site-word-counter'
-					) }
-				</p>
-				<Button
-					__next40pxDefaultSize
-					variant="primary"
-					onClick={ () =>
-						replaceBlocks(
-							clientId,
-							createBlock(
-								CURRENT_NAME,
-								mapLegacyAttributes( attributes )
-							)
-						)
-					}
+		<>
+			<BlockControls group="other">
+				<ToolbarGroup>
+					<ToolbarButton onClick={ convert }>
+						{ __( 'Convert', 'site-word-counter' ) }
+					</ToolbarButton>
+				</ToolbarGroup>
+			</BlockControls>
+			<InspectorControls>
+				<PanelBody
+					title={ __( 'Earlier version', 'site-word-counter' ) }
 				>
-					{ __( 'Convert', 'site-word-counter' ) }
-				</Button>
-			</Notice>
-		</div>
+					<p>
+						{ __(
+							'This counter was made with an earlier version of Site Word Counter. It still works on your site. Convert it to change its settings.',
+							'site-word-counter'
+						) }
+					</p>
+					<Button
+						__next40pxDefaultSize
+						variant="secondary"
+						onClick={ convert }
+					>
+						{ __( 'Convert', 'site-word-counter' ) }
+					</Button>
+				</PanelBody>
+			</InspectorControls>
+			<div { ...blockProps }>
+				<CounterPreview format="full" total={ total } />
+			</div>
+		</>
 	);
 }
 
