@@ -3,7 +3,7 @@
  * Plugin Name:       Site Word Counter
  * Plugin URI:        https://github.com/dhanson-wp/site-word-counter
  * Description:       A block that shows the total number of words published across your site.
- * Version:           0.1.0
+ * Version:           1.0.0
  * Requires at least: 6.9
  * Requires PHP:      7.4
  * Author:            Derek Hanson
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SITE_WORD_COUNTER_VERSION', '0.1.0' );
+define( 'SITE_WORD_COUNTER_VERSION', '1.0.0' );
 define( 'SITE_WORD_COUNTER_FILE', __FILE__ );
 define( 'SITE_WORD_COUNTER_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SITE_WORD_COUNTER_URL', plugin_dir_url( __FILE__ ) );

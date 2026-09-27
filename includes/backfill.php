@@ -36,7 +36,6 @@ function site_word_counter_posts_query_args( $missing_only ) {
 		'order'                  => 'ASC',
 		'update_post_meta_cache' => false,
 		'update_post_term_cache' => false,
-		'suppress_filters'       => true,
 	);
 
 	if ( $missing_only ) {

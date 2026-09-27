@@ -1,71 +1,97 @@
-
 === Site Word Counter ===
-
 Contributors:      dhansondesigns
-Tags:              block, word count, statistics, content analysis
-Tested up to:      6.8
-Stable tag:        0.1.0
+Tags:              word count, block, statistics, writing, blogging
+Requires at least: 6.9
+Tested up to:      7.1
+Requires PHP:      7.4
+Stable tag:        1.0.0
 License:           GPLv2 or later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
-A powerful block that calculates and displays the total number of words published across your entire WordPress site.
+Show the total number of words you've published across your whole site, as a block you can style and place anywhere.
 
 == Description ==
 
-The Site Word Counter block provides comprehensive word count statistics for your WordPress website. It scans through all your published posts and pages to calculate the total number of words, giving you valuable insights into your content volume.
+If you've been writing online for years, you've published a lot of words. Site Word Counter shows that number on your site.
 
-**Features:**
-* Real-time calculation of total site word count
-* Includes all published posts and pages
-* Clean, customizable display
-* Lightweight and performant
-* Automatically updates when new content is published
+The block is deliberately simple: by itself, it's just a number. Put it in a Row with a couple of Paragraph blocks and it becomes a line like "Blogging 33,895 words since 2022." It works well as a footer credit, on an About page, or anywhere you want to show how long you've been at it.
 
-This block is perfect for content creators, bloggers, and website owners who want to track their writing progress and showcase their content volume to visitors.
+**What it does**
 
-**Use Cases:**
-* Display writing achievements on author pages
-* Show content volume statistics
-* Track content creation progress
-* Provide transparency about site content depth
+* Counts the words in every published post and page, or the post types you choose.
+* Stores each post's count when you save it, so the total stays fast on sites with thousands of posts.
+* Counts accented words correctly, and counts Chinese, Japanese, and Thai text by character.
+* Leaves shortcodes, HTML, and titles out of the count.
+* Shows the full number (33,895) or a compact one (33.9K), formatted for your site's language.
+* Counts up when it scrolls into view. Visitors who prefer reduced motion see the final number right away, and screen readers always read the final number.
+* Uses the block editor's own typography, color, and spacing controls.
+
+**Settings**
+
+Go to **Settings › Word Counter** to choose which post types count, turn off counter animations across the site, check the counting status, and recount every post.
+
+**For developers**
+
+* `site_word_counter_post_types` filters the counted post types.
+* `site_word_counter_count_text` filters the count for a piece of content, so you can swap in your own counting rules.
+* `site_word_counter_total` filters the total before it's shown.
+* `wp site-word-counter recount [--all]` counts posts from the command line, and `wp site-word-counter total` prints the total.
+
+Site Word Counter started as a [WordPress Telex](https://telex.automattic.ai) experiment.
+
+**Source code**
+
+The plugin ships compiled JavaScript and CSS. The human-readable source, build tools, and issue tracker are on [GitHub](https://github.com/dhanson-wp/site-word-counter), in `src/` and `includes/`.
 
 == Installation ==
 
-1. Upload the plugin files to the `/wp-content/plugins/site-word-counter` directory, or install the plugin through the WordPress plugins screen directly.
-2. Activate the plugin through the 'Plugins' screen in WordPress
-3. Use the Site Word Counter block in any post or page through the block editor
+1. Install Site Word Counter from **Plugins › Add New**, or upload the ZIP from **Plugins › Add New › Upload Plugin**.
+2. Activate it. Existing posts are counted in the background right away.
+3. Add the **Site Word Counter** block to a post, page, or template part.
 
 == Frequently Asked Questions ==
 
-= What content does this block count? =
+= What counts as a word? =
 
-The block counts words from all published posts and pages on your site. It excludes drafts, private posts, and other post types by default.
+Runs of letters and numbers in any language, with apostrophes and hyphens inside a word kept together, so "isn't" and "state-of-the-art" are one word each. In Chinese, Japanese, Thai, and other languages written without spaces, each character counts as one. Titles, shortcodes, HTML, and block markup don't count.
 
-= Does this affect site performance? =
+= Which content counts? =
 
-The block is optimized for performance and caches the word count calculation to minimize database queries.
+Published posts and pages by default. Drafts, private posts, and scheduled posts don't count until they're published. You can add or remove post types in **Settings › Word Counter**.
 
-= Can I customize the display? =
+= I just installed it and the number looks low. =
 
-Yes, the block provides customization options for the display format and styling through the block editor.
+Older posts are counted in the background after activation, a few hundred at a time. The settings page shows the progress, and **Recount now** finishes it right away.
 
-= Will this work with custom post types? =
+= Will it slow down my site? =
 
-Currently, the block focuses on posts and pages. Custom post type support may be added in future versions.
+No. Each post is counted once when it's saved, and the total is a single cached query. The counting animation is a small script that only loads on pages with an animated counter.
+
+= Can I turn off the animation? =
+
+Yes. Each block has its own setting, and **Settings › Word Counter** can turn off every counter's animation at once. Visitors who ask their device for reduced motion never see it either way.
+
+= I used the version from the Telex blog post. Will my counter break? =
+
+No. Counters made with that version keep working. In the editor, they show a **Convert** button that turns them into the current block.
 
 == Screenshots ==
 
-1. The Site Word Counter block in the editor showing configuration options
-2. Front-end display of the word count with clean styling
+1. The counter in a Row with two Paragraph blocks, as a footer credit.
+2. Block settings: number format and animation.
+3. Settings › Word Counter: what counts, display, and status.
 
 == Changelog ==
 
+= 1.0.0 =
+* Rebuilt from the Telex prototype for WordPress.org.
+* Counts each post when it's saved and totals them with one query, with a background backfill and WP-CLI commands.
+* Unicode-aware counting that leaves out shortcodes and markup.
+* New compact number format, localized numbers, and an editor preview that matches the front end.
+* Accessible count-up animation that respects reduced motion and starts when the counter scrolls into view.
+* New Settings › Word Counter screen.
+* Uses the block editor's typography, color, and spacing controls.
+* Removes everything it stored when you delete it.
+
 = 0.1.0 =
-* Initial release
-* Word count calculation for posts and pages
-* Basic display formatting
-* Performance optimization with caching
-
-== Support ==
-
-For support and feature requests, use the plugin's support forum on WordPress.org.
+* The original Telex prototype.

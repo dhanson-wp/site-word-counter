@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [ trunk ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint:js
+      - run: npm run lint:css
+      - run: npm run build
+      - name: Check compiled assets are committed
+        run: git diff --exit-code -- compiled
+
+  phpcs:
+    name: PHP coding standards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+      - run: composer install --no-progress
+      - run: composer phpcs
+
+  plugin-check:
+    name: Plugin Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove files that don't ship
+        run: xargs -a .distignore -I{} sh -c 'rm -rf ./{}' || true
+      - uses: WordPress/plugin-check-action@v1
+        with:
+          build-dir: './'

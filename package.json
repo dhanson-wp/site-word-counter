@@ -1,6 +1,6 @@
 {
 	"name": "site-word-counter",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "A block that shows the total number of words published across your site.",
 	"author": "Derek Hanson",
 	"license": "GPL-2.0-or-later",
