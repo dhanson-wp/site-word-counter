@@ -128,8 +128,66 @@ function site_word_counter_line_markup( $align = '' ) {
 function site_word_counter_footer_line_markup() {
 	return '<!-- wp:group {"align":"full","style":{"spacing":{"padding":{"bottom":"1.5rem"}}},"layout":{"type":"constrained"}} -->'
 		. '<div class="wp-block-group alignfull" style="padding-bottom:1.5rem">'
-		. site_word_counter_line_markup( 'wide' )
+		. site_word_counter_line_markup( site_word_counter_footer_alignment() )
 		. '</div><!-- /wp:group -->';
+}
+
+/**
+ * Matches the footer's own content width: "wide" when the footer lays its
+ * content out wide (Twenty Twenty-Five), otherwise the content column (Ipsum).
+ *
+ * @return string "wide" or "".
+ */
+function site_word_counter_footer_alignment() {
+	static $align = null;
+	if ( null !== $align ) {
+		return $align;
+	}
+
+	$align = '';
+	$part  = site_word_counter_active_footer_part();
+	if ( ! $part ) {
+		return $align;
+	}
+
+	$blocks = site_word_counter_expand_patterns( parse_blocks( $part->content ) );
+	foreach ( $blocks as $block ) {
+		if ( empty( $block['blockName'] ) ) {
+			continue;
+		}
+		foreach ( $block['innerBlocks'] as $child ) {
+			if ( 'wide' === ( $child['attrs']['align'] ?? '' ) ) {
+				$align = 'wide';
+				break;
+			}
+		}
+		break;
+	}
+
+	return $align;
+}
+
+/**
+ * Replaces top-level Pattern blocks with the registered pattern's blocks.
+ *
+ * @param array[] $blocks Parsed blocks.
+ * @return array[]
+ */
+function site_word_counter_expand_patterns( $blocks ) {
+	$registry = WP_Block_Patterns_Registry::get_instance();
+	$expanded = array();
+
+	foreach ( $blocks as $block ) {
+		$slug = $block['attrs']['slug'] ?? '';
+		if ( 'core/pattern' === $block['blockName'] && $slug && $registry->is_registered( $slug ) ) {
+			$pattern  = $registry->get_registered( $slug );
+			$expanded = array_merge( $expanded, parse_blocks( $pattern['content'] ) );
+		} else {
+			$expanded[] = $block;
+		}
+	}
+
+	return $expanded;
 }
 
 /**
@@ -197,6 +255,18 @@ function site_word_counter_content_has_counter( $content ) {
  * @return string|null "footer", "after_posts", or null.
  */
 function site_word_counter_match_placement( $relative_position, $anchor_block_type, $context ) {
+	// Themes like Ipsum build the single template from a pattern, and Block
+	// Hooks then run with the pattern as the context.
+	if (
+		is_array( $context )
+		&& 'after' === $relative_position
+		&& 'core/post-content' === $anchor_block_type
+		&& isset( $context['slug'] )
+		&& in_array( $context['slug'], site_word_counter_single_template_patterns(), true )
+	) {
+		return 'after_posts';
+	}
+
 	if ( ! $context instanceof WP_Block_Template ) {
 		return null;
 	}
@@ -223,6 +293,40 @@ function site_word_counter_match_placement( $relative_position, $anchor_block_ty
 }
 
 /**
+ * Returns the slugs of patterns the active single post template is built from.
+ *
+ * @return string[]
+ */
+function site_word_counter_single_template_patterns() {
+	static $slugs = null;
+	if ( null !== $slugs ) {
+		return $slugs;
+	}
+
+	$slugs = array();
+	foreach ( array( 'single-post', 'single' ) as $template_slug ) {
+		$template = get_block_template( get_stylesheet() . '//' . $template_slug );
+		if ( ! $template ) {
+			continue;
+		}
+
+		$stack = parse_blocks( $template->content );
+		while ( $stack ) {
+			$block = array_shift( $stack );
+			if ( 'core/pattern' === $block['blockName'] && ! empty( $block['attrs']['slug'] ) ) {
+				$slugs[] = $block['attrs']['slug'];
+			}
+			if ( ! empty( $block['innerBlocks'] ) ) {
+				array_push( $stack, ...$block['innerBlocks'] );
+			}
+		}
+		break;
+	}
+
+	return $slugs;
+}
+
+/**
  * Hooks the counter into the footer and single post template when turned on.
  *
  * @param string[]                        $hooked_block_types Hooked block types.
@@ -237,7 +341,7 @@ function site_word_counter_hooked_block_types( $hooked_block_types, $relative_po
 	if (
 		$placement
 		&& site_word_counter_placement_enabled( $placement )
-		&& ! site_word_counter_content_has_counter( $context->content )
+		&& ! site_word_counter_content_has_counter( is_array( $context ) ? ( $context['content'] ?? '' ) : $context->content )
 	) {
 		$hooked_block_types[] = SITE_WORD_COUNTER_BLOCK_NAME;
 	}
