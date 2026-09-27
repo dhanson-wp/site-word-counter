@@ -121,7 +121,9 @@ function site_word_counter_schedule_backfill() {
 		wp_schedule_single_event( time(), SITE_WORD_COUNTER_BACKFILL_HOOK );
 	}
 }
+// The first save creates the option, so listen for both.
 add_action( 'update_option_site_word_counter_post_types', 'site_word_counter_schedule_backfill' );
+add_action( 'add_option_site_word_counter_post_types', 'site_word_counter_schedule_backfill' );
 
 /**
  * Runs one backfill batch, and schedules the next one if posts are left.

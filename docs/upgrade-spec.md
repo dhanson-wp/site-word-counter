@@ -80,6 +80,8 @@ Store a per-post count and sum it, rather than recounting the whole site.
 - **Post meta.** `_site_word_counter_words` (underscore, so it's hidden from the custom fields UI), registered with `register_post_meta()` as an integer, not shown in REST.
 - **Write on save.** Hook `wp_after_insert_post`. Skip revisions, autosaves, and post types that aren't counted. Store the count for any status, since a draft that gets published later already has its number.
 - **Total.** One query sums the meta for published posts of the counted types, prepared with `$wpdb->prepare()`. Cache the result in an option or transient with no expiry (`site_word_counter_total`) and delete it on `transition_post_status`, on `deleted_post`, and whenever the meta changes for a counted post.
+- **Available types.** Any post type that's public or publicly queryable, minus attachments, so custom post types like movie reviews qualify (`site_word_counter_available_post_types` filters the list). New types are offered in Settings, not counted automatically.
+- **Post text.** `apply_filters( 'site_word_counter_post_content', $post->post_content, $post )` runs before counting, so a post type can add text kept in custom fields.
 - **Counted types.** Read from the `site_word_counter_post_types` option (see Settings page), default `array( 'post', 'page' )`, then passed through `apply_filters( 'site_word_counter_post_types', $types )`. Only public types. Changing the option clears the cached total. Posts of a newly added type without meta are picked up by the backfill.
 - **Filtered total.** `apply_filters( 'site_word_counter_total', $total )` before it's rendered.
 
@@ -244,5 +246,6 @@ Work through these ten stories in order, one commit per story. Each story lists 
 | 8 | post | Shortcode | "Four words and shortcode." plus a `[gallery]` shortcode | 4 |
 | 10 | page | Counter test | "Blogging", the counter block, "words since 2022." | 4 |
 
+- Custom post types from the test helper mu-plugin: `movie_review` (public; ID 19, "Five stars, would watch again.", 5 words) and `swc_recipe` (not public but publicly queryable; ID 20, "Mix flour and water.", 4 words). Neither counts by default. Ticking both gives 43.
 - **Total: 34.** A draft post (ID 9), the Sample Page (ID 2, set to draft), and the Privacy Policy draft must not count.
 - Never use or change `~/Studio/derekhansonblog`. It's Derek's live blog's local copy.

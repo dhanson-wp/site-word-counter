@@ -12,6 +12,7 @@ By itself it's just a number, styled with the block editor's own typography, col
 - The editor preview matches the front end.
 - A count-up animation that starts when the counter scrolls into view, respects `prefers-reduced-motion`, and gives screen readers the final number.
 - **Settings › Word Counter**, built with the WordPress Design System: choose post types, turn off animations site-wide, see counting status, and recount.
+- Works with any custom post type visitors can see, like movie reviews or recipes.
 - Filters and WP-CLI commands for developers.
 
 ## Requirements
@@ -55,6 +56,8 @@ The design, stories, and test fixtures are in [`docs/upgrade-spec.md`](docs/upgr
 | Filter | What it changes |
 |---|---|
 | `site_word_counter_post_types` | The post types that count toward the total. |
+| `site_word_counter_available_post_types` | The post types offered in Settings. |
+| `site_word_counter_post_content` | The text counted for a post, for example to add custom fields. |
 | `site_word_counter_count_text` | The word count for a piece of content. |
 | `site_word_counter_total` | The total before it's displayed. |
 

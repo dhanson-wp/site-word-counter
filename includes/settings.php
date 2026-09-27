@@ -12,22 +12,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 const SITE_WORD_COUNTER_SETTINGS_SLUG = 'site-word-counter';
 
 /**
- * Returns public post types that can be counted, as slug => label.
- *
- * @return array<string, string>
- */
-function site_word_counter_available_post_types() {
-	$types = array();
-	foreach ( get_post_types( array( 'public' => true ), 'objects' ) as $slug => $type ) {
-		if ( 'attachment' !== $slug ) {
-			$types[ $slug ] = $type->labels->name;
-		}
-	}
-
-	return $types;
-}
-
-/**
  * Sanitizes the counted post types, never allowing an empty list.
  *
  * @param mixed $value Submitted value.

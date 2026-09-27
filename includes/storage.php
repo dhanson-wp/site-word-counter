@@ -32,19 +32,47 @@ function site_word_counter_register_meta() {
 add_action( 'init', 'site_word_counter_register_meta' );
 
 /**
+ * Returns the post types that can count, as slug => label.
+ *
+ * Any post type visitors can see counts as a candidate, including custom
+ * post types registered as public or publicly queryable. Attachments are
+ * left out.
+ *
+ * @return array<string, string>
+ */
+function site_word_counter_available_post_types() {
+	$objects = array_merge(
+		get_post_types( array( 'public' => true ), 'objects' ),
+		get_post_types( array( 'publicly_queryable' => true ), 'objects' )
+	);
+	unset( $objects['attachment'] );
+
+	$types = array();
+	foreach ( $objects as $slug => $type ) {
+		$types[ $slug ] = $type->labels->name;
+	}
+
+	/**
+	 * Filters the post types offered on the settings page.
+	 *
+	 * @param array<string, string> $types Post type labels, keyed by slug.
+	 */
+	return (array) apply_filters( 'site_word_counter_available_post_types', $types );
+}
+
+/**
  * Returns the post types that count toward the total.
  *
  * @return string[] Post type slugs.
  */
 function site_word_counter_get_post_types() {
-	$public = get_post_types( array( 'public' => true ) );
-	unset( $public['attachment'] );
+	$available = array_keys( site_word_counter_available_post_types() );
 
 	$saved = get_option( 'site_word_counter_post_types', array( 'post', 'page' ) );
-	$types = array_values( array_intersect( (array) $saved, $public ) );
+	$types = array_values( array_intersect( (array) $saved, $available ) );
 
 	if ( empty( $types ) ) {
-		$types = array_values( array_intersect( array( 'post', 'page' ), $public ) );
+		$types = array_values( array_intersect( array( 'post', 'page' ), $available ) );
 	}
 
 	/**
@@ -79,7 +107,17 @@ function site_word_counter_update_post_count( $post ) {
 		return null;
 	}
 
-	$count = site_word_counter_count_text( $post->post_content );
+	/**
+	 * Filters the text that's counted for a post.
+	 *
+	 * Use it to add text a post type keeps outside the post content, such as
+	 * custom fields.
+	 *
+	 * @param string  $content The post content.
+	 * @param WP_Post $post    The post.
+	 */
+	$content = (string) apply_filters( 'site_word_counter_post_content', $post->post_content, $post );
+	$count   = site_word_counter_count_text( $content );
 	update_post_meta( $post->ID, SITE_WORD_COUNTER_META_KEY, $count );
 
 	return $count;
@@ -156,6 +194,7 @@ add_action( 'added_post_meta', 'site_word_counter_on_meta_change', 10, 3 );
 add_action( 'updated_post_meta', 'site_word_counter_on_meta_change', 10, 3 );
 add_action( 'deleted_post_meta', 'site_word_counter_on_meta_change', 10, 3 );
 add_action( 'update_option_site_word_counter_post_types', 'site_word_counter_clear_total' );
+add_action( 'add_option_site_word_counter_post_types', 'site_word_counter_clear_total' );
 
 /**
  * Clears the cached total.

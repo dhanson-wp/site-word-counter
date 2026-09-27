@@ -33,6 +33,8 @@ Go to **Settings › Word Counter** to choose which post types count, turn off c
 **For developers**
 
 * `site_word_counter_post_types` filters the counted post types.
+* `site_word_counter_available_post_types` filters the post types offered in Settings.
+* `site_word_counter_post_content` filters the text counted for a post, so a custom post type can count words kept in custom fields.
 * `site_word_counter_count_text` filters the count for a piece of content, so you can swap in your own counting rules.
 * `site_word_counter_total` filters the total before it's shown.
 * `wp site-word-counter recount [--all]` counts posts from the command line, and `wp site-word-counter total` prints the total.
@@ -58,6 +60,10 @@ Runs of letters and numbers in any language, with apostrophes and hyphens inside
 = Which content counts? =
 
 Published posts and pages by default. Drafts, private posts, and scheduled posts don't count until they're published. You can add or remove post types in **Settings › Word Counter**.
+
+= Does it work with custom post types? =
+
+Yes. Any post type visitors can see, such as movie reviews, recipes, or products, shows up in **Settings › Word Counter**. Tick it, save, and its existing posts are counted in the background. If a post type keeps its text in custom fields instead of the editor, a developer can add those fields with the `site_word_counter_post_content` filter.
 
 = I just installed it and the number looks low. =
 
@@ -86,6 +92,7 @@ No. Counters made with that version keep working. In the editor, they show a **C
 = 1.0.0 =
 * Rebuilt from the Telex prototype for WordPress.org.
 * Counts each post when it's saved and totals them with one query, with a background backfill and WP-CLI commands.
+* Works with any public custom post type.
 * Unicode-aware counting that leaves out shortcodes and markup.
 * New compact number format, localized numbers, and an editor preview that matches the front end.
 * Accessible count-up animation that respects reduced motion and starts when the counter scrolls into view.
