@@ -131,23 +131,11 @@ function site_word_counter_enqueue_settings_assets( $hook_suffix ) {
 		'before'
 	);
 
-	// WordPress 7.1 registers the design tokens as wp-theme. Older versions get the bundled copy.
-	$style_dependencies = array( 'wp-components' );
-	if ( wp_style_is( 'wp-theme', 'registered' ) ) {
-		$style_dependencies[] = 'wp-theme';
-	} else {
-		wp_enqueue_style(
-			'site-word-counter-design-tokens',
-			SITE_WORD_COUNTER_URL . 'compiled/admin/design-tokens.css',
-			array(),
-			$asset['version']
-		);
-	}
-
+	// wp-theme holds the Design System's design tokens.
 	wp_enqueue_style(
 		'site-word-counter-settings',
 		SITE_WORD_COUNTER_URL . 'compiled/admin/index.css',
-		$style_dependencies,
+		array( 'wp-components', 'wp-theme' ),
 		$asset['version']
 	);
 }

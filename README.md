@@ -17,7 +17,7 @@ By itself it's just a number, styled with the block editor's own typography, col
 
 ## Requirements
 
-- WordPress 6.9 or later (tested up to 7.1)
+- WordPress 7.1 or later
 - PHP 7.4 or later
 
 ## Development

@@ -1,2 +1,0 @@
-(()=>{"use strict";var t={13368(){}};const r={};!function o(s){const e=r[s];if(void 0!==e)return e.exports;const n=r[s]={exports:{}};return t[s](n,n.exports,o),n.exports}(13368)})();
-//# sourceMappingURL=design-tokens.js.map

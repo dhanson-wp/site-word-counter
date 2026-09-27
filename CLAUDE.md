@@ -7,7 +7,7 @@ A WordPress block plugin that shows the total number of words published across a
 - Source lives in `src/`, and the build writes to `compiled/` (not `build/`, which PressShip leaves out).
 - Prefix PHP with `site_word_counter_`. Text domain is `site-word-counter`. Block name is `site-word-counter/site-word-counter`.
 - Follow WordPress Coding Standards (PHPCS) and `@wordpress/scripts` lint rules.
-- Target WordPress 7.1 (the current release), with 6.9 as the minimum. Check current docs through the `wp-devdocs` MCP, not memory.
+- Target WordPress 7.1 (the current release), as both the target and the minimum. Check current docs through the `wp-devdocs` MCP, not memory.
 - Accessibility first: respect `prefers-reduced-motion`, and keep the real number available to screen readers.
 
 ## Testing

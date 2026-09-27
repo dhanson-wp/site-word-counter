@@ -114,7 +114,6 @@ export default function SettingsPage() {
 					) }
 					actions={
 						<Button
-							__next40pxDefaultSize
 							variant="primary"
 							isBusy={ isSaving }
 							disabled={ ! hasEdits || isSaving }
