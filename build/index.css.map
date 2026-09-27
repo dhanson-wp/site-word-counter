@@ -1,0 +1,1 @@
+{"version":3,"file":"index.css","mappings":"AAAA,sDACC,cACA,eACA,kBACA,W","sources":["webpack://site-word-counter/./src/editor.scss"],"sourcesContent":[".wp-block-site-word-counter-site-word-counter__notice {\n\tdisplay: block;\n\tfont-size: 12px;\n\tfont-style: italic;\n\topacity: 0.7;\n}\n"],"names":[],"sourceRoot":""}

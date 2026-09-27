@@ -13,7 +13,13 @@ import './editor.scss';
 
 export default function Edit( { attributes, setAttributes } ) {
 	const { enableAnimation, format } = attributes;
-	const { formatted, backfillComplete, error } = useTotal();
+	const {
+		formatted,
+		backfillComplete,
+		animationDisabled,
+		settingsUrl,
+		error,
+	} = useTotal();
 
 	const blockProps = useBlockProps();
 
@@ -59,11 +65,31 @@ export default function Edit( { attributes, setAttributes } ) {
 							'Animate the number',
 							'site-word-counter'
 						) }
-						help={ __(
-							'Counts up when the block scrolls into view. Visitors who prefer reduced motion always see the final number.',
-							'site-word-counter'
-						) }
-						checked={ enableAnimation }
+						help={
+							animationDisabled ? (
+								<>
+									{ __(
+										'Counter animations are turned off for the whole site.',
+										'site-word-counter'
+									) }{ ' ' }
+									{ settingsUrl && (
+										<a href={ settingsUrl }>
+											{ __(
+												'Change this in Settings › Word Counter.',
+												'site-word-counter'
+											) }
+										</a>
+									) }
+								</>
+							) : (
+								__(
+									'Counts up when the block scrolls into view. Visitors who prefer reduced motion always see the final number.',
+									'site-word-counter'
+								)
+							)
+						}
+						checked={ enableAnimation && ! animationDisabled }
+						disabled={ animationDisabled }
 						onChange={ ( value ) =>
 							setAttributes( { enableAnimation: value } )
 						}

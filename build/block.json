@@ -1,0 +1,65 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "site-word-counter/site-word-counter",
+  "version": "0.1.0",
+  "title": "Site Word Counter",
+  "category": "widgets",
+  "icon": "editor-paragraph",
+  "description": "Shows the total number of words published across your site.",
+  "keywords": [
+    "word count",
+    "words",
+    "total",
+    "statistics",
+    "counter"
+  ],
+  "textdomain": "site-word-counter",
+  "attributes": {
+    "enableAnimation": {
+      "type": "boolean",
+      "default": true
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "full",
+        "compact"
+      ],
+      "default": "full"
+    }
+  },
+  "example": {
+    "attributes": {
+      "enableAnimation": false
+    }
+  },
+  "supports": {
+    "html": false,
+    "color": {
+      "text": true,
+      "background": true,
+      "link": false
+    },
+    "spacing": {
+      "margin": true,
+      "padding": true
+    },
+    "typography": {
+      "fontSize": true,
+      "lineHeight": true,
+      "textAlign": true,
+      "__experimentalFontFamily": true,
+      "__experimentalFontWeight": true,
+      "__experimentalFontStyle": true,
+      "__experimentalLetterSpacing": true,
+      "__experimentalDefaultControls": {
+        "fontSize": true
+      }
+    }
+  },
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css",
+  "render": "file:./render.php"
+}

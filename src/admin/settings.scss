@@ -1,0 +1,51 @@
+// The screen runs inside wp-admin's content area, so pull it back to the
+// edges and let the admin-ui Page handle its own padding.
+.site-word-counter-settings {
+	margin-left: -20px;
+
+	@media (max-width: 782px) {
+		margin-left: -10px;
+	}
+}
+
+.site-word-counter-settings__root {
+	isolation: isolate;
+	min-height: calc(100vh - 32px);
+}
+
+.site-word-counter-settings__content {
+	max-width: 720px;
+	padding-block-end: var(--wpds-dimension-padding-2xl);
+}
+
+.site-word-counter-settings__post-types {
+	border: 0;
+	margin: 0;
+	padding: 0;
+
+	legend {
+		margin-block-end: var(--wpds-dimension-gap-sm);
+		padding: 0;
+	}
+}
+
+.site-word-counter-settings__help {
+	display: block;
+	margin-block-start: var(--wpds-dimension-gap-md);
+	color: var(--wpds-color-foreground-content-neutral-weak);
+}
+
+.site-word-counter-settings__snackbars {
+	position: fixed;
+	bottom: 24px;
+	left: 184px;
+	right: auto;
+
+	@media (max-width: 960px) {
+		left: 60px;
+	}
+
+	@media (max-width: 782px) {
+		left: 16px;
+	}
+}

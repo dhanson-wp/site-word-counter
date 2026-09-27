@@ -7,13 +7,15 @@ import { useEffect, useState } from '@wordpress/element';
 /**
  * Fetches the site's total word count from the plugin's REST route.
  *
- * @return {{ total: ?number, formatted: ?Object, backfillComplete: boolean, error: boolean }} Total state.
+ * @return {{ total: ?number, formatted: ?Object, backfillComplete: boolean, animationDisabled: boolean, settingsUrl: ?string, error: boolean }} Total state.
  */
 export default function useTotal() {
 	const [ state, setState ] = useState( {
 		total: null,
 		formatted: null,
 		backfillComplete: true,
+		animationDisabled: false,
+		settingsUrl: null,
 		error: false,
 	} );
 
@@ -27,6 +29,8 @@ export default function useTotal() {
 						total: response.total,
 						formatted: response.formatted,
 						backfillComplete: response.backfill_complete,
+						animationDisabled: response.animation_disabled,
+						settingsUrl: response.settings_url,
 						error: false,
 					} );
 				}

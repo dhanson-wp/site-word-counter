@@ -10,6 +10,10 @@ module.exports = [
 		ignores: [ 'compiled/**' ],
 	},
 	{
+		rules: {
+			// Follow the Design System's current component recommendations.
+			'@wordpress/use-recommended-components': 'error',
+		},
 		settings: {
 			'import/core-modules': [
 				'@wordpress/a11y',
@@ -19,6 +23,8 @@ module.exports = [
 				'@wordpress/components',
 				'@wordpress/core-data',
 				'@wordpress/data',
+				'@wordpress/date',
+				'@wordpress/dom-ready',
 				'@wordpress/element',
 				'@wordpress/i18n',
 				'@wordpress/notices',

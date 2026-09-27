@@ -16,3 +16,4 @@ phpcs.xml.dist
 .distignore
 artefact.xml
 eslint.config.cjs
+webpack.config.js
