@@ -94,7 +94,7 @@ Existing sites have no meta yet.
 ### Block
 
 - `block.json`: `apiVersion: 3`, name `site-word-counter/site-word-counter`, text domain `site-word-counter`, dynamic (`render` file), no `save`.
-- Supports: `typography.textAlign`, `typography.fontSize`, `typography.lineHeight`, `__experimentalFontFamily`, `__experimentalFontWeight`, `__experimentalLetterSpacing`, `color.text`, `color.background`, `spacing.margin`, `spacing.padding`, and `align`. Remove the custom `textAlignment` attribute and the `AlignmentToolbar`.
+- Supports: `typography.textAlign`, `typography.fontSize`, `typography.lineHeight`, `__experimentalFontFamily`, `__experimentalFontWeight`, `__experimentalFontStyle`, `__experimentalLetterSpacing`, `color.text`, `color.background`, `spacing.margin`, and `spacing.padding`. Remove the custom `textAlignment` attribute and the `AlignmentToolbar`. (Built: block `align` was dropped, since a number doesn't need wide or full widths and `textAlign` covers alignment. In 7.1, text color shows under Typography in the Styles tab.)
 - Attributes: `enableAnimation` (boolean, default `true`) and `format` (`"full"` or `"compact"`, default `"full"`).
 - Compact format renders `33.9K` or `1.2M`. Use `number_format_i18n()` for the number, and a translatable suffix with a translator comment.
 - Markup is a single wrapper element with no inner element carrying the block class:
@@ -106,7 +106,7 @@ Existing sites have no meta yet.
   </span>
   ```
 
-  Use a `div` wrapper if a `span` causes layout or validation problems in a Row. The screen reader copy never animates. Escape everything, and add a phpcs ignore comment with a reason for `get_block_wrapper_attributes()`.
+  (Built: the wrapper is a `div`, because `textAlign` does nothing on an inline `span`. When animation is off, only one plain number span is rendered.) The screen reader copy never animates. Escape everything, and add a phpcs ignore comment with a reason for `get_block_wrapper_attributes()`.
 - Keep the old block name registered so existing content doesn't break. Register `telex/block-site-word-counter` with `inserter: false` and the same render callback. Map its `textAlignment` attribute to the new text alignment at render time, and add a `transforms.from` on the new block so an editor can convert it with one click.
 
 ### Settings page
@@ -133,7 +133,7 @@ A React screen at **Settings > Word Counter**, not a top-level menu item.
 
 ### Editor
 
-- A REST route, `GET /site-word-counter/v1/total`, returns `{ "total": int, "formatted": string, "backfill_complete": bool }`. Its permission callback requires `edit_posts`.
+- A REST route, `GET /site-word-counter/v1/total`, returns `{ "total": int, "formatted": { "full": string, "compact": string }, "backfill_complete": bool }`, so switching the format in the editor doesn't need another request. Its permission callback requires `edit_posts`.
 - The settings page adds `GET /site-word-counter/v1/status` (counted posts, posts to count, backfill running, last recount time) and `POST /site-word-counter/v1/recount` (processes one batch and returns progress, `offset` in and out). Both require `manage_options`.
 - `edit.js` fetches it once with `apiFetch` and renders the same markup as the front end, without animating.
 - If `backfill_complete` is false, show a small notice under the number in the editor ("Still counting older posts").

@@ -1,36 +1,16 @@
-/**
- * The following styles get applied both on the front of your site
- * and in the editor.
- *
- * Replace them with your own styles or remove the file completely.
- */
-
 .wp-block-site-word-counter-site-word-counter {
-	.word-counter-number {
-		/* Use theme default font styles */
-		font-family: inherit;
-		font-size: inherit;
-		font-weight: inherit;
-		color: inherit;
-		line-height: inherit;
-		letter-spacing: inherit;
-	}
+	// Keeps digits the same width so the count-up doesn't jitter.
+	font-variant-numeric: tabular-nums;
 
-	.word-counter-loading {
-		opacity: 0.6;
-		font-style: italic;
-	}
-
-	// Alignment classes
-	&.has-text-align-left {
-		text-align: left;
-	}
-
-	&.has-text-align-center {
-		text-align: center;
-	}
-
-	&.has-text-align-right {
-		text-align: right;
+	.screen-reader-text {
+		border: 0;
+		clip-path: inset(50%);
+		height: 1px;
+		margin: -1px;
+		overflow: hidden;
+		padding: 0;
+		position: absolute;
+		width: 1px;
+		overflow-wrap: normal !important;
 	}
 }

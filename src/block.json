@@ -5,45 +5,52 @@
 	"version": "0.1.0",
 	"title": "Site Word Counter",
 	"category": "widgets",
-	"icon": "analytics",
+	"icon": "editor-paragraph",
 	"description": "Shows the total number of words published across your site.",
-	"example": {
-		"attributes": {
-			"enableAnimation": true
-		}
-	},
+	"keywords": [ "word count", "words", "total", "statistics", "counter" ],
+	"textdomain": "site-word-counter",
 	"attributes": {
 		"enableAnimation": {
 			"type": "boolean",
 			"default": true
 		},
-		"textAlignment": {
+		"format": {
 			"type": "string",
-			"default": "left"
+			"enum": [ "full", "compact" ],
+			"default": "full"
+		}
+	},
+	"example": {
+		"attributes": {
+			"enableAnimation": false
 		}
 	},
 	"supports": {
 		"html": false,
-		"align": ["left", "center", "right", "wide", "full"],
 		"color": {
-			"background": false,
 			"text": true,
-			"gradients": false
+			"background": true,
+			"link": false
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true
 		},
 		"typography": {
 			"fontSize": true,
-			"fontFamily": true,
-			"fontWeight": true
-		},
-		"spacing": {
-			"padding": true,
-			"margin": true
+			"lineHeight": true,
+			"textAlign": true,
+			"__experimentalFontFamily": true,
+			"__experimentalFontWeight": true,
+			"__experimentalFontStyle": true,
+			"__experimentalLetterSpacing": true,
+			"__experimentalDefaultControls": {
+				"fontSize": true
+			}
 		}
 	},
-	"textdomain": "site-word-counter",
 	"editorScript": "file:./index.js",
 	"editorStyle": "file:./index.css",
 	"style": "file:./style-index.css",
-	"viewScript": "file:./view.js",
 	"render": "file:./render.php"
 }

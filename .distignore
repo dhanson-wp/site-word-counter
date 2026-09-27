@@ -21,3 +21,4 @@ package-lock.json
 phpcs.xml.dist
 *.zip
 artefact.xml
+eslint.config.cjs
