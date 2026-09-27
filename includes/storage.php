@@ -201,6 +201,11 @@ add_action( 'add_option_site_word_counter_post_types', 'site_word_counter_clear_
  */
 function site_word_counter_clear_total() {
 	delete_transient( SITE_WORD_COUNTER_TOTAL_KEY );
+
+	/**
+	 * Fires after the cached total is cleared.
+	 */
+	do_action( 'site_word_counter_total_cleared' );
 }
 
 /**

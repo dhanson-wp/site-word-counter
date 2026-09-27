@@ -127,7 +127,12 @@ function site_word_counter_enqueue_settings_assets( $hook_suffix ) {
 
 	wp_add_inline_script(
 		'site-word-counter-settings',
-		'window.siteWordCounterSettings = ' . wp_json_encode( array( 'postTypes' => $post_types ) ) . ';',
+		'window.siteWordCounterSettings = ' . wp_json_encode(
+			array(
+				'postTypes' => $post_types,
+				'placement' => site_word_counter_placement_targets(),
+			)
+		) . ';',
 		'before'
 	);
 

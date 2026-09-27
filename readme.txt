@@ -26,9 +26,13 @@ The block is deliberately simple: by itself, it's just a number. Put it in a Row
 * Counts up when it scrolls into view. Visitors who prefer reduced motion see the final number right away, and screen readers always read the final number.
 * Uses the block editor's own typography, color, and spacing controls.
 
+**Show it on your site**
+
+On block themes, **Settings › Word Counter** can add a line like "33,895 words published since 2019." to your footer, below each post, or both, with the year taken from your first post. Each spot has a **Preview and edit** link that opens it in the Site Editor, where you can reword, restyle, or remove it. Two patterns, "Words published since" and "Word count stat", are in the block inserter for anywhere else.
+
 **Settings**
 
-Go to **Settings › Word Counter** to choose which post types count, turn off counter animations across the site, check the counting status, and recount every post.
+Go to **Settings › Word Counter** to choose which post types count, choose where the word count shows up, turn off counter animations across the site, check the counting status, and recount every post.
 
 **For developers**
 
@@ -73,6 +77,14 @@ Older posts are counted in the background after activation, a few hundred at a t
 
 No. Each post is counted once when it's saved, and the total is a single cached query. The counting animation is a small script that only loads on pages with an animated counter.
 
+= How do I add it to my footer? =
+
+On a block theme, go to **Settings › Word Counter**, tick **Word count in your footer**, and save. Use **Preview and edit** to change the wording in the Site Editor. On a classic theme, add the Site Word Counter block or the "Words published since" pattern anywhere blocks are allowed, such as a widget area.
+
+= I deleted the line in the Site Editor. How do I get it back? =
+
+WordPress remembers that you removed it and won't add it again. Open the footer or template in the Site Editor and insert the "Words published since" pattern.
+
 = Can I turn off the animation? =
 
 Yes. Each block has its own setting, and **Settings › Word Counter** can turn off every counter's animation at once. Visitors who ask their device for reduced motion never see it either way.
@@ -85,7 +97,8 @@ No. Counters made with that version keep working. In the editor they show your n
 
 1. The counter in a Row with two Paragraph blocks, as a footer credit.
 2. Block settings: number format and animation.
-3. Settings › Word Counter: what counts, display, and status.
+3. Settings › Word Counter: what counts, where it shows up, display, and status.
+4. The "Words published since" line in a theme's footer.
 
 == Changelog ==
 
@@ -93,6 +106,8 @@ No. Counters made with that version keep working. In the editor they show your n
 * Rebuilt from the Telex prototype for WordPress.org.
 * Counts each post when it's saved and totals them with one query, with a background backfill and WP-CLI commands.
 * Works with any public custom post type.
+* Adds the word count to your footer or below each post on block themes, with Preview and edit links to the Site Editor.
+* "Words published since" and "Word count stat" block patterns.
 * Unicode-aware counting that leaves out shortcodes and markup.
 * New compact number format, localized numbers, and an editor preview that matches the front end.
 * Accessible count-up animation that respects reduced motion and starts when the counter scrolls into view.

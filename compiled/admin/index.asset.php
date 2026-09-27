@@ -12,7 +12,8 @@
 		'wp-element',
 		'wp-i18n',
 		'wp-notices',
+		'wp-primitives',
 		'wp-theme'
 	),
-	'version' => 'cdff5ae97e2fc571e2b6'
+	'version' => '96a995b2882e8ca41015'
 );
