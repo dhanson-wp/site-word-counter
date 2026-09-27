@@ -10,11 +10,13 @@ The block stays what the original post describes: a number that looks like plain
 2. It stays fast on a site with twenty years of posts.
 3. The editor shows the same number as the front end.
 4. The animation is optional, accessible, and never shows a wrong final number.
-5. It passes Plugin Check, PHPCS (WordPress Coding Standards), and the .org guidelines with no Telex leftovers.
+5. Site owners choose what counts, see the counting status, and recount from a modern settings screen under Settings, with no command line needed.
+6. It passes Plugin Check, PHPCS (WordPress Coding Standards), and the .org guidelines with no Telex leftovers.
 
 ## Out of scope for 1.0
 
-- Per-block post type selection (1.0 uses one site-wide filter).
+- Per-block post type selection. Post types are chosen once for the site on the settings page, because there's one cached total.
+- Site-wide defaults for block settings. Each setting lives in one place: what counts is on the settings page, and how the number looks is on the block.
 - A "since" year pulled from the first published post.
 - Counting words in comments, titles, excerpts, or custom fields.
 - Multisite network totals.
@@ -78,7 +80,7 @@ Store a per-post count and sum it, rather than recounting the whole site.
 - **Post meta.** `_site_word_counter_words` (underscore, so it's hidden from the custom fields UI), registered with `register_post_meta()` as an integer, not shown in REST.
 - **Write on save.** Hook `wp_after_insert_post`. Skip revisions, autosaves, and post types that aren't counted. Store the count for any status, since a draft that gets published later already has its number.
 - **Total.** One query sums the meta for published posts of the counted types, prepared with `$wpdb->prepare()`. Cache the result in an option or transient with no expiry (`site_word_counter_total`) and delete it on `transition_post_status`, on `deleted_post`, and whenever the meta changes for a counted post.
-- **Counted types.** `apply_filters( 'site_word_counter_post_types', array( 'post', 'page' ) )`. Only public types.
+- **Counted types.** Read from the `site_word_counter_post_types` option (see Settings page), default `array( 'post', 'page' )`, then passed through `apply_filters( 'site_word_counter_post_types', $types )`. Only public types. Changing the option clears the cached total. Posts of a newly added type without meta are picked up by the backfill.
 - **Filtered total.** `apply_filters( 'site_word_counter_total', $total )` before it's rendered.
 
 ### Backfill
@@ -107,34 +109,52 @@ Existing sites have no meta yet.
   Use a `div` wrapper if a `span` causes layout or validation problems in a Row. The screen reader copy never animates. Escape everything, and add a phpcs ignore comment with a reason for `get_block_wrapper_attributes()`.
 - Keep the old block name registered so existing content doesn't break. Register `telex/block-site-word-counter` with `inserter: false` and the same render callback. Map its `textAlignment` attribute to the new text alignment at render time, and add a `transforms.from` on the new block so an editor can convert it with one click.
 
+### Settings page
+
+A React screen at **Settings > Word Counter**, not a top-level menu item.
+
+- **Menu.** `add_options_page()` with the `manage_options` capability, slug `site-word-counter`. Add a "Settings" link on the Plugins screen row with `plugin_action_links_{basename}`.
+- **Options.** Registered with `register_setting()` in the `site_word_counter` group, each with a `sanitize_callback`, a default, and `show_in_rest` with a schema, so the screen saves through `/wp/v2/settings`:
+  - `site_word_counter_post_types`: array of public post type slugs, default `[ "post", "page" ]`. Sanitize against `get_post_types( array( 'public' => true ) )`, and never save an empty list (fall back to the default).
+  - `site_word_counter_disable_animation`: boolean, default `false`. When true, no counter on the site animates, whatever each block says.
+- **Screen.** Built with `@wordpress/dataviews` (`DataForm`) and `@wordpress/components`, loading and saving the site entity through `@wordpress/core-data` (`useEntityRecord( 'root', 'site' )` and `saveEditedEntityRecord`). Use the card layout, with a sticky Save button and a success or error snackbar. Enqueue its script and styles only on this screen. `DataForm` isn't one of WordPress's registered script handles, so it's bundled; check the bundle size and keep it reasonable.
+- **Sections:**
+  1. **What counts.** A checkbox list of public post types, with help text saying titles, drafts, and private posts never count.
+  2. **Display.** The "Turn off counter animations across the site" toggle, with help text pointing to reduced-motion accessibility.
+  3. **Status.** Read only: the current total (formatted), posts counted of posts to count, whether the backfill is running, and when the last full recount ran. A **Recount now** button runs the recount in batches through REST with a progress bar, and the screen stays usable while it runs.
+- **Design system.** Check `@wordpress/ui` (the WordPress Design System package) against the current docs before building. Use it where it's stable and available to plugins, and fall back to `@wordpress/components` where it isn't. Use WordPress design tokens, not custom colors or spacing. Record which one you used, and why, in this spec.
+- **Accessibility.** Every control has a visible label. Progress is announced with `speak()` from `@wordpress/a11y`. It works with the keyboard alone and at 200% zoom.
+
 ### Editor
 
 - A REST route, `GET /site-word-counter/v1/total`, returns `{ "total": int, "formatted": string, "backfill_complete": bool }`. Its permission callback requires `edit_posts`.
+- The settings page adds `GET /site-word-counter/v1/status` (counted posts, posts to count, backfill running, last recount time) and `POST /site-word-counter/v1/recount` (processes one batch and returns progress, `offset` in and out). Both require `manage_options`.
 - `edit.js` fetches it once with `apiFetch` and renders the same markup as the front end, without animating.
 - If `backfill_complete` is false, show a small notice under the number in the editor ("Still counting older posts").
 
 ### Front end
 
 - `view.js` becomes a `viewScriptModule` with no dependencies (no Interactivity API needed for this).
-- Do nothing if `enableAnimation` is off or `matchMedia( '(prefers-reduced-motion: reduce)' )` matches.
+- Do nothing if `enableAnimation` is off, the site-wide `site_word_counter_disable_animation` option is on, or `matchMedia( '(prefers-reduced-motion: reduce)' )` matches. When animation is off for either setting, `render.php` doesn't enqueue the view module at all.
+- In the editor, when the site-wide switch is on, the block's animation toggle is disabled with help text saying animations are turned off in Settings > Word Counter, and linking there.
 - Start the count-up when the block first scrolls into view (`IntersectionObserver`, threshold around 0.5), once per block.
 - Format intermediate frames with `Intl.NumberFormat( document.documentElement.lang || undefined )`, and on the last frame set the text back to the exact server-rendered string, so the final number always matches PHP.
 - Ease out over about 1.5 seconds.
 
 ### Cleanup
 
-- `uninstall.php` deletes the meta key for all posts, the cached total, and the scheduled backfill event.
+- `uninstall.php` deletes the meta key for all posts, the cached total, both options, the last recount time, and the scheduled backfill event.
 - Remove `save.js` and `artefact.xml` from the plugin (`artefact.xml` is already untracked).
 
 ### Requirements
 
-- `Requires at least`: the lowest WordPress version that has every block support used here. Check `typography.textAlign`, and don't guess.
+- `Requires at least`: **6.9**, because the settings screen uses `DataForm`'s card layout (6.9+). Confirm it also covers every block support used (check `typography.textAlign`), and don't guess.
 - `Requires PHP`: 7.4.
 - `Tested up to`: the current WordPress release at build time.
 
 ## Stories
 
-Work through these in order, one commit per story. Each story lists how to check it.
+Work through these ten stories in order, one commit per story. Each story lists how to check it.
 
 ### 1. Tooling and baseline
 
@@ -174,21 +194,27 @@ Work through these in order, one commit per story. Each story lists how to check
 
 **Check:** the editor shows `34`, the same as the front end. Logged out, the route returns 401.
 
-### 7. Front end animation and accessibility
+### 7. Settings page
+
+- The options, REST routes for status and recount, the React screen, and the Plugins screen link.
+
+**Check:** Settings > Word Counter appears under Settings, and not as its own menu item. An Editor role user can't see it. Unticking Pages and saving drops the total from `34` to `30` on the front end and in the editor, and ticking it again brings back `34`. Saving an empty post type list keeps posts and pages. Recount now finishes with a progress bar and updates the status. With the animation switch on, no counter animates and the block's toggle is disabled with a link to Settings. The screen passes a keyboard-only run and has no console errors.
+
+### 8. Front end animation and accessibility
 
 - The view module, reduced motion, `IntersectionObserver`, and screen reader markup.
 
 **Check:** with reduced motion emulated, the number doesn't animate. With the `lang` attribute set to `de-DE` and a filtered total of 33895, the animation ends on `33.895`, matching PHP. The screen reader text is always the final number.
 
-### 8. Uninstall and cleanup
+### 9. Uninstall and cleanup
 
 - `uninstall.php`. Remove `save.js`.
 
-**Check:** on a throwaway copy, delete the plugin, then confirm no `_site_word_counter_words` meta, cached total, or cron event remains.
+**Check:** on a throwaway copy, delete the plugin, then confirm no `_site_word_counter_words` meta, options, cached total, or cron event remains.
 
-### 9. Docs, readme, and release checks
+### 10. Docs, readme, and release checks
 
-- Rewrite `readme.txt` (honest description, real FAQ, filters, WP-CLI, changelog, `Stable tag: 1.0.0`).
+- Rewrite `readme.txt` (honest description, the settings page, real FAQ, filters, WP-CLI, changelog, `Stable tag: 1.0.0`). Add a screenshot slot for the settings screen.
 - Add a GitHub-style `README.md` like Scroll Indicator's.
 - Add a GitHub Actions workflow running lint, PHPCS, and `WordPress/plugin-check-action`.
 - Bump everything to 1.0.0.
