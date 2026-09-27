@@ -4,7 +4,7 @@
  * Plugin URI:        https://github.com/dhanson-wp/site-word-counter
  * Description:       A block that shows the total number of words published across your site.
  * Version:           1.0.0
- * Requires at least: 6.9
+ * Requires at least: 7.1
  * Requires PHP:      7.4
  * Author:            Derek Hanson
  * Author URI:        https://derekhanson.blog

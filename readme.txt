@@ -1,7 +1,7 @@
 === Site Word Counter ===
 Contributors:      dhansondesigns
 Tags:              word count, block, statistics, writing, blogging
-Requires at least: 6.9
+Requires at least: 7.1
 Tested up to:      7.1
 Requires PHP:      7.4
 Stable tag:        1.0.0

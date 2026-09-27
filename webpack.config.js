@@ -1,15 +1,10 @@
 /**
- * The @wordpress/scripts default config, plus the settings screen entries.
+ * The @wordpress/scripts default config, plus the settings screen and the
+ * front-end view module entries.
  */
-const DependencyExtractionWebpackPlugin = require( '@wordpress/dependency-extraction-webpack-plugin' );
 const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
 
-// @wordpress/theme is only a WordPress script from 7.0 on, and the plugin
-// supports 6.9, so bundle it like the other Design System packages.
-const isBundledTheme = ( request ) =>
-	request === '@wordpress/theme' || request.startsWith( '@wordpress/theme/' );
-
-const withSettingsScreen = ( config ) => ( {
+const withEntries = ( config, entries ) => ( {
 	...config,
 	entry: async () => {
 		const defaultEntries =
@@ -17,40 +12,14 @@ const withSettingsScreen = ( config ) => ( {
 				? await config.entry()
 				: config.entry;
 
-		return {
-			...defaultEntries,
-			'admin/index': './src/admin/index.js',
-			'admin/design-tokens': './src/admin/design-tokens.js',
-		};
+		return { ...defaultEntries, ...entries };
 	},
-	plugins: config.plugins.map( ( plugin ) =>
-		plugin instanceof DependencyExtractionWebpackPlugin
-			? new DependencyExtractionWebpackPlugin( {
-					requestToExternal: ( request ) =>
-						isBundledTheme( request ) ? false : undefined,
-					requestToHandle: ( request ) =>
-						isBundledTheme( request ) ? false : undefined,
-			  } )
-			: plugin
-	),
 } );
 
 // The front-end view module is registered and enqueued from PHP only when a
 // counter animates, so it's its own module entry rather than a block.json
 // viewScriptModule.
-const withViewModule = ( config ) => ( {
-	...config,
-	entry: async () => {
-		const defaultEntries =
-			typeof config.entry === 'function'
-				? await config.entry()
-				: config.entry;
-
-		return { ...defaultEntries, view: './src/view.js' };
-	},
-} );
-
 module.exports = [
-	withSettingsScreen( defaultConfig[ 0 ] ),
-	withViewModule( defaultConfig[ 1 ] ),
+	withEntries( defaultConfig[ 0 ], { 'admin/index': './src/admin/index.js' } ),
+	withEntries( defaultConfig[ 1 ], { view: './src/view.js' } ),
 ];

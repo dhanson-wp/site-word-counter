@@ -24,7 +24,6 @@ export default function Edit( { attributes, setAttributes } ) {
 			<InspectorControls>
 				<PanelBody title={ __( 'Settings', 'site-word-counter' ) }>
 					<SelectControl
-						__next40pxDefaultSize
 						__nextHasNoMarginBottom
 						label={ __( 'Number format', 'site-word-counter' ) }
 						value={ format }

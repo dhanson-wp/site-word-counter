@@ -124,8 +124,8 @@ A React screen at **Settings > Word Counter**, not a top-level menu item.
   - ~~`@wordpress/dataviews` (`DataForm`, card layout) for the form~~. (Built: `DataForm` was dropped. Bundled through `@wordpress/dataviews/wp`, it brings its own copy of the component library, date-fns, and framer-motion, and the screen's script was 394 KB gzipped for two settings. Without it, the screen is 36 KB gzipped. The two sections are `@wordpress/ui` `Card`s holding `CheckboxControl`s and a `ToggleControl`, loaded and saved through `@wordpress/core-data`'s site entity.)
   - `@wordpress/ui` for anything else (`Stack` for layout, and its buttons and notices where they exist), wrapped in `ThemeProvider` seeded with `getAdminThemeColors()` from `@wordpress/admin-ui`, so the screen follows the user's admin color scheme.
   - A sticky Save button, and a success or error notice after saving.
-- **Bundling.** `@wordpress/ui`, `@wordpress/admin-ui`, and `@wordpress/theme` aren't `window.wp` globals on every supported version (`wp-theme` only exists from 7.0), so `webpack.config.js` bundles `@wordpress/theme` too. They so they're bundled into this screen's script. `@wordpress/ui` is marked experimental, so pin exact versions in `package.json` (no `^`) and upgrade on purpose. Because they're bundled, a WordPress update can't break the screen. Enqueue the script and styles only on this screen, and keep the bundle size reasonable.
-- **Styles.** Make the screen's stylesheet depend on `wp-components`. For design tokens, depend on the `wp-theme` stylesheet when it's registered (WordPress 7.1 and later), and otherwise enqueue the tokens CSS bundled from `@wordpress/theme`. Add `isolation: isolate` to the screen's root element. If `@wordpress/ui` and `@wordpress/components` overlays are both bundled, call `useEnableWpCompatOverlaySlot()` once at the root.
+- **Bundling.** `@wordpress/ui` and `@wordpress/admin-ui` aren't `window.wp` globals, so they're bundled. `@wordpress/theme` is WordPress's `wp-theme` script, and from 7.1 (the plugin's minimum) it has a public `ThemeProvider` and a `wp-theme` design tokens stylesheet, so it stays external. (7.0's `wp-theme` only exposes `privateApis` and has no stylesheet, which crashed the screen in testing. Before the minimum moved to 7.1, `webpack.config.js` bundled it.) They so they're bundled into this screen's script. `@wordpress/ui` is marked experimental, so pin exact versions in `package.json` (no `^`) and upgrade on purpose. Because they're bundled, a WordPress update can't break the screen. Enqueue the script and styles only on this screen, and keep the bundle size reasonable.
+- **Styles.** Make the screen's stylesheet depend on `wp-components` and `wp-theme` (the design tokens). Add `isolation: isolate` to the screen's root element.
 - **Sections:**
   1. **What counts.** A checkbox list of public post types, with help text saying titles, drafts, and private posts never count.
   2. **Display.** The "Turn off counter animations across the site" toggle, with help text pointing to reduced-motion accessibility.
@@ -157,10 +157,10 @@ A React screen at **Settings > Word Counter**, not a top-level menu item.
 
 ### Requirements
 
-- `Requires at least`: **6.9**. (`DataForm` was dropped, so this is no longer about its card layout; 6.9 stays as the tested floor.) Confirm it also covers every block support used (check `typography.textAlign`), and don't guess. The block itself is the product, so don't raise the minimum just for the settings screen's looks; the bundled tokens fallback covers 6.9 and 7.0.
+- `Requires at least`: **7.1**. (Raised from 6.9 on 2026-09-27 at Derek's call. 7.1 is the current release and Ipsum's own minimum, and it's the first version whose `wp-theme` has what the settings screen needs; 7.0 was tried and crashed.)
 - `Requires PHP`: 7.4.
 - `Tested up to`: **7.1**, the current release (7.1.2 as of 2026-09-27; confirm it's still current at build time).
-- WordPress 7.1 makes 40px the default height for form controls and ignores `__next40pxDefaultSize` at runtime. Keep that prop and `__nextHasNoMarginBottom` on inspector controls while the plugin supports 6.9 and 7.0, where leaving them off shows deprecation warnings. Don't use `View`'s `css` prop, the removed `Navigation` component, or `__experimentalApplyValueToSides`.
+- WordPress 7.1 makes 40px the default height for form controls and ignores `__next40pxDefaultSize` at runtime. With 7.1 as the minimum, `__next40pxDefaultSize` is dropped everywhere. Don't use `View`'s `css` prop, the removed `Navigation` component, or `__experimentalApplyValueToSides`.
 - The 7.1 changes are in the [WordPress 7.1 Field Guide](https://make.wordpress.org/core/2026/08/05/wordpress-7-1-field-guide/). Check it, and the [Design System theming dev note](https://make.wordpress.org/core/2026/07/31/design-system-theming-in-wordpress-7-1/), before stories 5 and 7.
 
 ## Stories
@@ -230,7 +230,7 @@ Work through these ten stories in order, one commit per story. Each story lists 
 - Add a GitHub Actions workflow running lint, PHPCS, and `WordPress/plugin-check-action`.
 - Bump everything to 1.0.0.
 
-**Check:** Plugin Check (`studio wp plugin check site-word-counter` with the Plugin Check plugin installed on the test site) reports no errors. The plugin works on WordPress 6.9 and 7.1 (switch the test site's version with `studio site set --wp`, or use a Playground). `npx pressship pack .` makes `site-word-counter.zip` with `site-word-counter/` as its top-level folder and no dev files.
+**Check:** Plugin Check (`studio wp plugin check site-word-counter` with the Plugin Check plugin installed on the test site) reports no errors. The plugin works on WordPress 7.1 (switch the test site's version with `studio site set --wp`, or use a Playground). `npx pressship pack .` makes `site-word-counter.zip` with `site-word-counter/` as its top-level folder and no dev files.
 
 ## Test site
 

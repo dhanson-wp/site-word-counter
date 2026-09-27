@@ -5,14 +5,14 @@
 		'wp-a11y',
 		'wp-api-fetch',
 		'wp-components',
-		'wp-compose',
 		'wp-core-data',
 		'wp-data',
 		'wp-date',
 		'wp-dom-ready',
 		'wp-element',
 		'wp-i18n',
-		'wp-notices'
+		'wp-notices',
+		'wp-theme'
 	),
-	'version' => '350112faa548a6dc8357'
+	'version' => 'cdff5ae97e2fc571e2b6'
 );

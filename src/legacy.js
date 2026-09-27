@@ -90,11 +90,7 @@ function LegacyEdit( { attributes, clientId } ) {
 							'site-word-counter'
 						) }
 					</p>
-					<Button
-						__next40pxDefaultSize
-						variant="secondary"
-						onClick={ convert }
-					>
+					<Button variant="secondary" onClick={ convert }>
 						{ __( 'Convert', 'site-word-counter' ) }
 					</Button>
 				</PanelBody>

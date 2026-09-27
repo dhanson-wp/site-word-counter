@@ -139,7 +139,6 @@ export default function StatusCard( { status, onChange, onError } ) {
 						) }
 						<div>
 							<Button
-								__next40pxDefaultSize
 								variant="secondary"
 								isBusy={ isRecounting }
 								disabled={ isRecounting }
