@@ -1,0 +1,13 @@
+.DS_Store
+.env
+.env.*
+.npm/
+.cache/
+coverage/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+*.zip
+artefact.xml
