@@ -29,6 +29,7 @@ require_once SITE_WORD_COUNTER_DIR . 'includes/storage.php';
 require_once SITE_WORD_COUNTER_DIR . 'includes/backfill.php';
 require_once SITE_WORD_COUNTER_DIR . 'includes/render.php';
 require_once SITE_WORD_COUNTER_DIR . 'includes/legacy.php';
+require_once SITE_WORD_COUNTER_DIR . 'includes/rest.php';
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	require_once SITE_WORD_COUNTER_DIR . 'includes/class-site-word-counter-cli.php';
