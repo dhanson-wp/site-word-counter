@@ -108,22 +108,22 @@ export default function Edit({ attributes, setAttributes }) {
 			</BlockControls>
 
 			<InspectorControls>
-				<PanelBody title={__('Word Counter Settings', 'site-word-counter-block-wp')}>
+				<PanelBody title={__('Word Counter Settings', 'site-word-counter')}>
 					<ToggleControl
-						label={__('Enable number animation', 'site-word-counter-block-wp')}
+						label={__('Enable number animation', 'site-word-counter')}
 						checked={enableAnimation}
 						onChange={(value) => setAttributes({ enableAnimation: value })}
-						help={__('Animate the number counting up when the page loads', 'site-word-counter-block-wp')}
+						help={__('Animate the number counting up when the page loads', 'site-word-counter')}
 					/>
 				</PanelBody>
 			</InspectorControls>
 
 			<div {...blockProps}>
-				<div className="wp-block-telex-site-word-counter">
+				<div className="wp-block-site-word-counter-site-word-counter">
 					<span className="word-counter-number">
 						{isLoading ? (
 							<span className="word-counter-loading">
-								{__('Calculating...', 'site-word-counter-block-wp')}
+								{__('Calculating...', 'site-word-counter')}
 							</span>
 						) : (
 							formatNumber(wordCount)

@@ -1,87 +1,76 @@
 <?php
 /**
  * Plugin Name:       Site Word Counter
- * Description:       A powerful block that calculates and displays the total number of words published across your entire WordPress site.
+ * Plugin URI:        https://github.com/dhanson-wp/site-word-counter
+ * Description:       A block that shows the total number of words published across your site.
  * Version:           0.1.0
- * Requires at least: 6.0
+ * Requires at least: 6.9
  * Requires PHP:      7.4
- * Author:            WordPress Telex
+ * Author:            Derek Hanson
+ * Author URI:        https://derekhanson.blog
  * License:           GPLv2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       site-word-counter-block-wp
+ * Text Domain:       site-word-counter
  *
  * @package SiteWordCounter
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit; // Exit if accessed directly.
+	exit;
 }
 
+define( 'SITE_WORD_COUNTER_VERSION', '0.1.0' );
+define( 'SITE_WORD_COUNTER_FILE', __FILE__ );
+define( 'SITE_WORD_COUNTER_DIR', plugin_dir_path( __FILE__ ) );
+define( 'SITE_WORD_COUNTER_URL', plugin_dir_url( __FILE__ ) );
+
 /**
- * Registers the block using the metadata loaded from the `block.json` file.
- * Behind the scenes, it registers also all assets so they can be enqueued
- * through the block editor in the corresponding context.
+ * Registers the block from its compiled metadata.
+ */
+function site_word_counter_register_block() {
+	register_block_type( SITE_WORD_COUNTER_DIR . 'compiled/' );
+}
+add_action( 'init', 'site_word_counter_register_block' );
+
+/**
+ * Returns the total word count for published posts and pages.
  *
- * @see https://developer.wordpress.org/reference/functions/register_block_type/
+ * @return int Total words.
  */
-function site_word_counter_block_init() {
-	register_block_type( __DIR__ . '/compiled/' );
-}
-add_action( 'init', 'site_word_counter_block_init' );
+function site_word_counter_get_total() {
+	$cached = get_transient( 'site_word_counter_total' );
+	if ( false !== $cached ) {
+		return (int) $cached;
+	}
 
-/**
- * Calculate total word count for all published posts and pages
- */
-if ( ! function_exists( 'get_site_total_word_count' ) ) {
-	function get_site_total_word_count() {
-		// Check for cached result
-		$cached_count = get_transient( 'site_total_word_count' );
-		if ( false !== $cached_count ) {
-			return $cached_count;
-		}
-
-		$args = array(
-			'post_type' => array( 'post', 'page' ),
-			'post_status' => 'publish',
+	$post_ids = get_posts(
+		array(
+			'post_type'      => array( 'post', 'page' ),
+			'post_status'    => 'publish',
 			'posts_per_page' => -1,
-			'fields' => 'ids'
-		);
+			'fields'         => 'ids',
+		)
+	);
 
-		$posts = get_posts( $args );
-		$total_words = 0;
-
-		foreach ( $posts as $post_id ) {
-			$post = get_post( $post_id );
-			if ( $post ) {
-				// Get content and strip HTML tags
-				$content = wp_strip_all_tags( $post->post_content );
-				// Remove extra whitespace
-				$content = preg_replace( '/\s+/', ' ', $content );
-				// Count words
-				$word_count = str_word_count( $content );
-				$total_words += $word_count;
-			}
-		}
-
-		// Cache for 1 hour
-		set_transient( 'site_total_word_count', $total_words, HOUR_IN_SECONDS );
-
-		return $total_words;
+	$total = 0;
+	foreach ( $post_ids as $post_id ) {
+		$content = wp_strip_all_tags( get_post_field( 'post_content', $post_id ) );
+		$content = preg_replace( '/\s+/', ' ', $content );
+		$total  += str_word_count( $content );
 	}
+
+	set_transient( 'site_word_counter_total', $total, HOUR_IN_SECONDS );
+
+	return $total;
 }
 
 /**
- * Clear word count cache when posts are updated
+ * Clears the cached total.
  */
-if ( ! function_exists( 'clear_site_word_count_cache' ) ) {
-	function clear_site_word_count_cache() {
-		delete_transient( 'site_total_word_count' );
-	}
+function site_word_counter_clear_cache() {
+	delete_transient( 'site_word_counter_total' );
 }
-
-// Clear cache when content is updated
-add_action( 'save_post', 'clear_site_word_count_cache' );
-add_action( 'delete_post', 'clear_site_word_count_cache' );
-add_action( 'wp_trash_post', 'clear_site_word_count_cache' );
-add_action( 'untrashed_post', 'clear_site_word_count_cache' );
-	
+add_action( 'save_post', 'site_word_counter_clear_cache' );
+add_action( 'delete_post', 'site_word_counter_clear_cache' );
+add_action( 'wp_trash_post', 'site_word_counter_clear_cache' );
+add_action( 'untrashed_post', 'site_word_counter_clear_cache' );

@@ -7,7 +7,7 @@ $enable_animation = $attributes['enableAnimation'] ?? true;
 $text_alignment = $attributes['textAlignment'] ?? 'left';
 
 // Get the total word count
-$word_count = get_site_total_word_count();
+$word_count = site_word_counter_get_total();
 
 // Format the number
 $formatted_count = number_format($word_count);
@@ -23,7 +23,7 @@ $animation_attr = $enable_animation ? '' : ' data-no-animation="true"';
 ?>
 
 <div <?php echo $wrapper_attributes; ?>>
-	<div class="wp-block-telex-site-word-counter"<?php echo $animation_attr; ?>>
+	<div class="wp-block-site-word-counter-site-word-counter"<?php echo $animation_attr; ?>>
 		<span class="word-counter-number">
 			<?php echo esc_html($formatted_count); ?>
 		</span>

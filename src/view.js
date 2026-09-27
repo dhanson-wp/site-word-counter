@@ -10,7 +10,7 @@
 
 // Add number formatting animation on load
 document.addEventListener('DOMContentLoaded', function() {
-	const wordCounters = document.querySelectorAll('.wp-block-telex-site-word-counter');
+	const wordCounters = document.querySelectorAll('.wp-block-site-word-counter-site-word-counter');
 	
 	wordCounters.forEach(function(counterBlock) {
 		// Check if animation is enabled

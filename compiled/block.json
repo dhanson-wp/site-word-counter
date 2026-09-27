@@ -1,12 +1,12 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "telex/block-site-word-counter",
+  "name": "site-word-counter/site-word-counter",
   "version": "0.1.0",
   "title": "Site Word Counter",
   "category": "widgets",
   "icon": "analytics",
-  "description": "Displays the total number of words published across your entire site",
+  "description": "Shows the total number of words published across your site.",
   "example": {
     "attributes": {
       "enableAnimation": true
@@ -46,7 +46,7 @@
       "margin": true
     }
   },
-  "textdomain": "site-word-counter-block-wp",
+  "textdomain": "site-word-counter",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",
   "style": "file:./style-index.css",

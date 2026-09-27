@@ -1,7 +1,7 @@
 
 === Site Word Counter ===
 
-Contributors:      WordPress Telex
+Contributors:      dhansondesigns
 Tags:              block, word count, statistics, content analysis
 Tested up to:      6.8
 Stable tag:        0.1.0
@@ -68,4 +68,4 @@ Currently, the block focuses on posts and pages. Custom post type support may be
 
 == Support ==
 
-For support and feature requests, please visit the plugin's support forum or contact WordPress Telex.
+For support and feature requests, use the plugin's support forum on WordPress.org.
