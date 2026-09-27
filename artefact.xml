@@ -1,0 +1,566 @@
+<?xml version="1.0"?><artefact xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="artefact.xsd" name="Site Word Counter" slug="site-word-counter" type="code-package" schemaVersion="2">
+  <file path="readme.txt">
+    <description>This file contains the readme information for the block. It is used to provide information about the block, its usage, and any other relevant details.</description>
+    <content><![CDATA[
+=== Site Word Counter ===
+
+Contributors:      WordPress Telex
+Tags:              block, word count, statistics, content analysis
+Tested up to:      6.8
+Stable tag:        0.1.0
+License:           GPLv2 or later
+License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+
+A powerful block that calculates and displays the total number of words published across your entire WordPress site.
+
+== Description ==
+
+The Site Word Counter block provides comprehensive word count statistics for your WordPress website. It scans through all your published posts and pages to calculate the total number of words, giving you valuable insights into your content volume.
+
+**Features:**
+* Real-time calculation of total site word count
+* Includes all published posts and pages
+* Clean, customizable display
+* Lightweight and performant
+* Automatically updates when new content is published
+
+This block is perfect for content creators, bloggers, and website owners who want to track their writing progress and showcase their content volume to visitors.
+
+**Use Cases:**
+* Display writing achievements on author pages
+* Show content volume statistics
+* Track content creation progress
+* Provide transparency about site content depth
+
+== Installation ==
+
+1. Upload the plugin files to the `/wp-content/plugins/site-word-counter` directory, or install the plugin through the WordPress plugins screen directly.
+2. Activate the plugin through the 'Plugins' screen in WordPress
+3. Use the Site Word Counter block in any post or page through the block editor
+
+== Frequently Asked Questions ==
+
+= What content does this block count? =
+
+The block counts words from all published posts and pages on your site. It excludes drafts, private posts, and other post types by default.
+
+= Does this affect site performance? =
+
+The block is optimized for performance and caches the word count calculation to minimize database queries.
+
+= Can I customize the display? =
+
+Yes, the block provides customization options for the display format and styling through the block editor.
+
+= Will this work with custom post types? =
+
+Currently, the block focuses on posts and pages. Custom post type support may be added in future versions.
+
+== Screenshots ==
+
+1. The Site Word Counter block in the editor showing configuration options
+2. Front-end display of the word count with clean styling
+
+== Changelog ==
+
+= 0.1.0 =
+* Initial release
+* Word count calculation for posts and pages
+* Basic display formatting
+* Performance optimization with caching
+
+== Support ==
+
+For support and feature requests, please visit the plugin's support forum or contact WordPress Telex.
+]]></content>
+  </file>
+  <file path="site-word-counter.php">
+    <description>This file contains the block registration code in the form of a single block plugin. Any other plugin related functionality should be added to this file. All block rendering functionality should go to the `render.php` file.</description>
+    <content><![CDATA[<?php
+/**
+ * Plugin Name:       Site Word Counter
+ * Description:       A powerful block that calculates and displays the total number of words published across your entire WordPress site.
+ * Version:           0.1.0
+ * Requires at least: 6.0
+ * Requires PHP:      7.4
+ * Author:            WordPress Telex
+ * License:           GPLv2 or later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:       site-word-counter-block-wp
+ *
+ * @package SiteWordCounter
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
+/**
+ * Registers the block using the metadata loaded from the `block.json` file.
+ * Behind the scenes, it registers also all assets so they can be enqueued
+ * through the block editor in the corresponding context.
+ *
+ * @see https://developer.wordpress.org/reference/functions/register_block_type/
+ */
+function site_word_counter_block_init() {
+	register_block_type( __DIR__ . '/build/' );
+}
+add_action( 'init', 'site_word_counter_block_init' );
+
+/**
+ * Calculate total word count for all published posts and pages
+ */
+if ( ! function_exists( 'get_site_total_word_count' ) ) {
+	function get_site_total_word_count() {
+		// Check for cached result
+		$cached_count = get_transient( 'site_total_word_count' );
+		if ( false !== $cached_count ) {
+			return $cached_count;
+		}
+
+		$args = array(
+			'post_type' => array( 'post', 'page' ),
+			'post_status' => 'publish',
+			'posts_per_page' => -1,
+			'fields' => 'ids'
+		);
+
+		$posts = get_posts( $args );
+		$total_words = 0;
+
+		foreach ( $posts as $post_id ) {
+			$post = get_post( $post_id );
+			if ( $post ) {
+				// Get content and strip HTML tags
+				$content = wp_strip_all_tags( $post->post_content );
+				// Remove extra whitespace
+				$content = preg_replace( '/\s+/', ' ', $content );
+				// Count words
+				$word_count = str_word_count( $content );
+				$total_words += $word_count;
+			}
+		}
+
+		// Cache for 1 hour
+		set_transient( 'site_total_word_count', $total_words, HOUR_IN_SECONDS );
+
+		return $total_words;
+	}
+}
+
+/**
+ * Clear word count cache when posts are updated
+ */
+if ( ! function_exists( 'clear_site_word_count_cache' ) ) {
+	function clear_site_word_count_cache() {
+		delete_transient( 'site_total_word_count' );
+	}
+}
+
+// Clear cache when content is updated
+add_action( 'save_post', 'clear_site_word_count_cache' );
+add_action( 'delete_post', 'clear_site_word_count_cache' );
+add_action( 'wp_trash_post', 'clear_site_word_count_cache' );
+add_action( 'untrashed_post', 'clear_site_word_count_cache' );
+	]]></content>
+  </file>
+  <file path="src/block.json">
+    <description>This file contains metadata about the block including its name, title, category, icon, and other properties. The icon is a WordPress Dashicon name (e.g., "admin-post", "format-aside", "admin-page"). Do not use any icon that's not in the list under any circustamce. These are the only slugs available:
+	
+	menu menu-alt menu-alt2 menu-alt3 admin-site admin-site-alt admin-site-alt2 admin-site-alt3 dashboard admin-post admin-media admin-links admin-page admin-comments admin-appearance admin-plugins plugins-checked admin-users admin-tools admin-settings admin-network admin-home admin-generic admin-collapse filter admin-customizer admin-multisite welcome-write-blog welcome-add-page welcome-view-site welcome-widgets-menus welcome-comments welcome-learn-more format-aside format-image format-gallery format-video format-status format-quote format-chat format-audio camera camera-alt images-alt images-alt2 video-alt video-alt2 video-alt3 media-archive media-audio media-code media-default media-document media-interactive media-spreadsheet media-text media-video playlist-audio playlist-video controls-play controls-pause controls-forward controls-skipforward controls-back controls-skipback controls-repeat controls-volumeon controls-volumeoff image-crop image-rotate image-rotate-left image-rotate-right image-flip-vertical image-flip-horizontal image-filter undo redo database-add database database-export database-import database-remove database-view align-full-width align-pull-left align-pull-right align-wide block-default button cloud-saved cloud-upload columns cover-image ellipsis embed-audio embed-generic embed-photo embed-post embed-video exit heading html info-outline insert insert-after insert-before remove saved shortcode table-col-after table-col-before table-col-delete table-row-after table-row-before table-row-delete editor-bold editor-italic editor-ul editor-ol editor-ol-rtl editor-quote editor-alignleft editor-aligncenter editor-alignright editor-insertmore editor-spellcheck editor-expand editor-contract editor-kitchensink editor-underline editor-justify editor-textcolor editor-paste-word editor-paste-text editor-removeformatting editor-video editor-customchar editor-outdent editor-indent editor-help editor-strikethrough editor-unlink editor-rtl editor-ltr editor-break editor-code editor-paragraph editor-table align-left align-right align-center align-none lock unlock calendar calendar-alt visibility hidden post-status edit trash sticky external arrow-up arrow-down arrow-right arrow-left arrow-up-alt arrow-down-alt arrow-right-alt arrow-left-alt arrow-up-alt2 arrow-down-alt2 arrow-right-alt2 arrow-left-alt2 sort leftright randomize list-view excerpt-view grid-view move share share-alt share-alt2 rss email email-alt email-alt2 networking amazon facebook facebook-alt google instagram linkedin pinterest podio reddit spotify twitch twitter twitter-alt whatsapp xing youtube hammer art migrate performance universal-access universal-access-alt tickets nametag clipboard heart megaphone schedule tide rest-api code-standards buddicons-activity buddicons-bbpress-logo buddicons-buddypress-logo buddicons-community buddicons-forums buddicons-friends buddicons-groups buddicons-pm buddicons-replies buddicons-topics buddicons-tracking wordpress wordpress-alt pressthis update update-alt screenoptions info cart feedback cloud translation tag category archive tagcloud text bell yes yes-alt no no-alt plus plus-alt plus-alt2 minus dismiss marker star-filled star-half star-empty flag warning location location-alt vault shield shield-alt sos search slides text-page analytics chart-pie chart-bar chart-line chart-area groups businessman businesswoman businessperson id id-alt products awards forms testimonials portfolio book book-alt download upload backup clock lightbulb microphone desktop laptop tablet smartphone phone index-card carrot building store album palmtree tickets-alt money money-alt smiley thumbs-up thumbs-down layout paperclip color-picker edit-large edit-page airplane bank beer calculator car coffee drumstick food fullscreen-alt fullscreen-exit-alt games hourglass open-folder pdf pets printer privacy superhero superhero-alt</description>
+    <content><![CDATA[{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "telex/block-site-word-counter",
+	"version": "0.1.0",
+	"title": "Site Word Counter",
+	"category": "widgets",
+	"icon": "analytics",
+	"description": "Displays the total number of words published across your entire site",
+	"example": {
+		"attributes": {
+			"enableAnimation": true
+		}
+	},
+	"attributes": {
+		"enableAnimation": {
+			"type": "boolean",
+			"default": true
+		},
+		"textAlignment": {
+			"type": "string",
+			"default": "left"
+		}
+	},
+	"supports": {
+		"html": false,
+		"align": ["left", "center", "right", "wide", "full"],
+		"color": {
+			"background": false,
+			"text": true,
+			"gradients": false
+		},
+		"typography": {
+			"fontSize": true,
+			"fontFamily": true,
+			"fontWeight": true
+		},
+		"spacing": {
+			"padding": true,
+			"margin": true
+		}
+	},
+	"textdomain": "site-word-counter-block-wp",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css",
+	"viewScript": "file:./view.js",
+	"render": "file:./render.php"
+}]]></content>
+  </file>
+  <file path="src/index.js">
+    <description>This file registers the block, specifies the edit and save functions, and loads the block's metadata</description>
+    <content><![CDATA[
+  /**
+ * Registers a new block provided a unique name and an object defining its behavior.
+ *
+ * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-registration/
+ */
+import { registerBlockType } from '@wordpress/blocks';
+
+/**
+ * Lets webpack process CSS, SASS or SCSS files referenced in JavaScript files.
+ * All files containing `style` keyword are bundled together. The code used
+ * gets applied both to the front of your site and to the editor.
+ *
+ * @see https://www.npmjs.com/package/@wordpress/scripts#using-css
+ */
+import './style.scss';
+
+/**
+ * Internal dependencies
+ */
+import Edit from './edit';
+import metadata from './block.json';
+
+/**
+ * Every block starts by registering a new block type definition.
+ *
+ * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-registration/
+ */
+registerBlockType( metadata.name, {
+	/**
+	 * @see ./edit.js
+	 */
+	edit: Edit,
+} );
+	]]></content>
+  </file>
+  <file path="src/edit.js">
+    <description>This file contains the edit function for the block which is responsible for rendering the block in the editor.</description>
+    <content><![CDATA[/**
+ * Retrieves the translation of text.
+ *
+ * @see https://developer.wordpress.org/block-editor/reference-guides/packages/packages-i18n/
+ */
+import { __ } from '@wordpress/i18n';
+
+/**
+ * React hook that is used to mark the block wrapper element.
+ * It provides all the necessary props like the class name.
+ *
+ * @see https://developer.wordpress.org/block-editor/reference-guides/packages/packages-block-editor/#useblockprops
+ */
+import { 
+	useBlockProps,
+	InspectorControls,
+	BlockControls,
+	AlignmentToolbar
+} from '@wordpress/block-editor';
+
+import {
+	PanelBody,
+	ToggleControl
+} from '@wordpress/components';
+
+import { useState, useEffect } from '@wordpress/element';
+import apiFetch from '@wordpress/api-fetch';
+
+/**
+ * Lets webpack process CSS, SASS or SCSS files referenced in JavaScript files.
+ * Those files can contain any CSS code that gets applied to the editor.
+ *
+ * @see https://www.npmjs.com/package/@wordpress/scripts#using-css
+ */
+import './editor.scss';
+
+/**
+ * The edit function describes the structure of your block in the context of the
+ * editor. This represents what the editor will render when the block is used.
+ *
+ * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#edit
+ *
+ * @return {Element} Element to render.
+ */
+export default function Edit({ attributes, setAttributes }) {
+	const { enableAnimation, textAlignment } = attributes;
+	const [wordCount, setWordCount] = useState(null);
+	const [isLoading, setIsLoading] = useState(true);
+
+	const blockProps = useBlockProps({
+		className: `has-text-align-${textAlignment}`,
+		style: {
+			textAlign: textAlignment
+		}
+	});
+
+	// Fetch word count for preview
+	useEffect(() => {
+		const fetchWordCount = async () => {
+			try {
+				const response = await apiFetch({
+					path: '/wp/v2/posts',
+					method: 'GET',
+					data: {
+						status: 'publish',
+						per_page: 100,
+						context: 'edit'
+					}
+				});
+
+				// This is a simplified calculation for the editor preview
+				// The actual calculation happens server-side
+				let totalWords = 0;
+				response.forEach(post => {
+					if (post.content && post.content.rendered) {
+						const textContent = post.content.rendered.replace(/<[^>]*>/g, '');
+						const words = textContent.trim().split(/\s+/);
+						totalWords += words.length;
+					}
+				});
+
+				setWordCount(totalWords);
+				setIsLoading(false);
+			} catch (error) {
+				console.error('Error fetching word count:', error);
+				setWordCount(0);
+				setIsLoading(false);
+			}
+		};
+
+		fetchWordCount();
+	}, []);
+
+	const formatNumber = (num) => {
+		if (num === null) return '...';
+		return new Intl.NumberFormat().format(num);
+	};
+
+	return (
+		<>
+			<BlockControls>
+				<AlignmentToolbar
+					value={textAlignment}
+					onChange={(nextAlign) => {
+						setAttributes({ textAlignment: nextAlign });
+					}}
+				/>
+			</BlockControls>
+
+			<InspectorControls>
+				<PanelBody title={__('Word Counter Settings', 'site-word-counter-block-wp')}>
+					<ToggleControl
+						label={__('Enable number animation', 'site-word-counter-block-wp')}
+						checked={enableAnimation}
+						onChange={(value) => setAttributes({ enableAnimation: value })}
+						help={__('Animate the number counting up when the page loads', 'site-word-counter-block-wp')}
+					/>
+				</PanelBody>
+			</InspectorControls>
+
+			<div {...blockProps}>
+				<div className="wp-block-telex-site-word-counter">
+					<span className="word-counter-number">
+						{isLoading ? (
+							<span className="word-counter-loading">
+								{__('Calculating...', 'site-word-counter-block-wp')}
+							</span>
+						) : (
+							formatNumber(wordCount)
+						)}
+					</span>
+				</div>
+			</div>
+		</>
+	);
+}]]></content>
+  </file>
+  <file path="src/save.js">
+    <description>This file contains the save function for the block which is responsible for creating the static result of rendering the block on the client to display the saved result on the front end.</description>
+    <content><![CDATA[
+  
+	]]></content>
+  </file>
+  <file path="src/style.scss">
+    <description>This file contains styles for the block in the front end.</description>
+    <content><![CDATA[/**
+ * The following styles get applied both on the front of your site
+ * and in the editor.
+ *
+ * Replace them with your own styles or remove the file completely.
+ */
+
+.wp-block-telex-site-word-counter {
+	.word-counter-number {
+		/* Use theme default font styles */
+		font-family: inherit;
+		font-size: inherit;
+		font-weight: inherit;
+		color: inherit;
+		line-height: inherit;
+		letter-spacing: inherit;
+	}
+
+	.word-counter-loading {
+		opacity: 0.6;
+		font-style: italic;
+	}
+
+	// Alignment classes
+	&.has-text-align-left {
+		text-align: left;
+	}
+
+	&.has-text-align-center {
+		text-align: center;
+	}
+
+	&.has-text-align-right {
+		text-align: right;
+	}
+}]]></content>
+  </file>
+  <file path="src/editor.scss">
+    <description>This file contains styles for the block in the editor.</description>
+    <content><![CDATA[/**
+ * The following styles get applied inside the editor only.
+ *
+ * Replace them with your own styles or remove the file completely.
+ */
+
+.wp-block-telex-site-word-counter {
+	.word-counter-loading {
+		animation: pulse 1.5s ease-in-out infinite alternate;
+	}
+}
+
+@keyframes pulse {
+	from { opacity: 0.4; }
+	to { opacity: 1; }
+}]]></content>
+  </file>
+  <file path="src/view.js">
+    <description>This file contains the view function for the block which is responsible for rendering interactive behaviors of the block on the front end. Ideally using the WordPress interactivity API.</description>
+    <content><![CDATA[/**
+ * Use this file for JavaScript code that you want to run in the front-end
+ * on posts/pages that contain this block.
+ *
+ * When this file is defined as the value of the `viewScript` property
+ * in `block.json` it will be enqueued on the front end of the site.
+ *
+ * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#view-script
+ */
+
+// Add number formatting animation on load
+document.addEventListener('DOMContentLoaded', function() {
+	const wordCounters = document.querySelectorAll('.wp-block-telex-site-word-counter');
+	
+	wordCounters.forEach(function(counterBlock) {
+		// Check if animation is enabled
+		const animationEnabled = !counterBlock.hasAttribute('data-no-animation');
+		
+		if (!animationEnabled) {
+			return;
+		}
+		
+		const numberElement = counterBlock.querySelector('.word-counter-number');
+		if (!numberElement) return;
+		
+		const finalNumber = parseInt(numberElement.textContent.replace(/,/g, ''));
+		if (!isNaN(finalNumber) && finalNumber > 0) {
+			animateCounter(numberElement, 0, finalNumber, 2000);
+		}
+	});
+});
+
+function animateCounter(element, start, end, duration) {
+	let startTimestamp = null;
+	const step = (timestamp) => {
+		if (!startTimestamp) startTimestamp = timestamp;
+		const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+		const current = Math.floor(progress * (end - start) + start);
+		element.textContent = new Intl.NumberFormat().format(current);
+		if (progress < 1) {
+			window.requestAnimationFrame(step);
+		}
+	};
+	window.requestAnimationFrame(step);
+}]]></content>
+  </file>
+  <file path="src/render.php">
+    <description>This file contains the render callback function for the block, which is responsible for rendering the block content on the front end. A render function should exist only if the block is dynamic.</description>
+    <content><![CDATA[<?php
+/**
+ * @see https://github.com/WordPress/gutenberg/blob/trunk/docs/reference-guides/block-api/block-metadata.md#render
+ */
+
+$enable_animation = $attributes['enableAnimation'] ?? true;
+$text_alignment = $attributes['textAlignment'] ?? 'left';
+
+// Get the total word count
+$word_count = get_site_total_word_count();
+
+// Format the number
+$formatted_count = number_format($word_count);
+
+// Set up classes and attributes
+$wrapper_attributes = get_block_wrapper_attributes([
+	'class' => "has-text-align-{$text_alignment}",
+	'style' => "text-align: {$text_alignment};"
+]);
+
+// Add data attribute to disable animation if needed
+$animation_attr = $enable_animation ? '' : ' data-no-animation="true"';
+?>
+
+<div <?php echo $wrapper_attributes; ?>>
+	<div class="wp-block-telex-site-word-counter"<?php echo $animation_attr; ?>>
+		<span class="word-counter-number">
+			<?php echo esc_html($formatted_count); ?>
+		</span>
+	</div>
+</div>]]></content>
+  </file>
+  <file path="package.json">
+    <description>The AI assistant should only edit 'site-word-counter', 'description' and resolve 'isDynamicVariant' in this file and ALWAYS INCLUDE IT. This file includes the necessary scripts for building, formatting, and linting the block code. Dependencies are managed at the workspace level via pnpm.</description>
+    <content><![CDATA[
+  {
+	"name": "site-word-counter",
+	"version": "0.1.0",
+	"description": "A powerful block that calculates and displays the total number of words published across your entire WordPress site.",
+	"author": "WordPress Telex",
+	"license": "GPL-2.0-or-later",
+	"main": "build/index.js",
+	"scripts": {
+		"build": "wp-scripts build",
+		"format": "wp-scripts format",
+		"lint:css": "wp-scripts lint-style",
+		"lint:js": "wp-scripts lint-js",
+		"packages-update": "wp-scripts packages-update",
+		"plugin-zip": "wp-scripts plugin-zip",
+		"start": "wp-scripts start"
+	}
+}
+]]></content>
+  </file>
+</artefact>

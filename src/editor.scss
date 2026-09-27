@@ -1,0 +1,16 @@
+/**
+ * The following styles get applied inside the editor only.
+ *
+ * Replace them with your own styles or remove the file completely.
+ */
+
+.wp-block-telex-site-word-counter {
+	.word-counter-loading {
+		animation: pulse 1.5s ease-in-out infinite alternate;
+	}
+}
+
+@keyframes pulse {
+	from { opacity: 0.4; }
+	to { opacity: 1; }
+}
