@@ -17,3 +17,4 @@ phpcs.xml.dist
 artefact.xml
 eslint.config.cjs
 webpack.config.js
+.wordpress-org/

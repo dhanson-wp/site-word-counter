@@ -95,10 +95,10 @@ No. Counters made with that version keep working. In the editor they show your n
 
 == Screenshots ==
 
-1. The counter in a Row with two Paragraph blocks, as a footer credit.
-2. Block settings: number format and animation.
-3. Settings › Word Counter: what counts, where it shows up, display, and status.
-4. The "Words published since" line in a theme's footer.
+1. The word count added below a post: "33,895 words published since 2019."
+2. The "Word count stat" pattern on an About page, with the word count in the footer.
+3. Block settings: number format and animation, plus the editor's own typography and color controls.
+4. Settings › Word Counter: choose what counts, and add the word count to your footer or below each post.
 
 == Changelog ==
 

@@ -28,6 +28,7 @@ module.exports = [
 				'@wordpress/element',
 				'@wordpress/i18n',
 				'@wordpress/notices',
+				'@wordpress/primitives',
 				'@wordpress/url',
 			],
 		},

@@ -5,9 +5,14 @@
 	"version": "1.0.0",
 	"title": "Site Word Counter",
 	"category": "widgets",
-	"icon": "editor-paragraph",
 	"description": "Shows the total number of words published across your site.",
-	"keywords": [ "word count", "words", "total", "statistics", "counter" ],
+	"keywords": [
+		"word count",
+		"words",
+		"total",
+		"statistics",
+		"counter"
+	],
 	"textdomain": "site-word-counter",
 	"attributes": {
 		"enableAnimation": {
@@ -16,7 +21,10 @@
 		},
 		"format": {
 			"type": "string",
-			"enum": [ "full", "compact" ],
+			"enum": [
+				"full",
+				"compact"
+			],
 			"default": "full"
 		}
 	},

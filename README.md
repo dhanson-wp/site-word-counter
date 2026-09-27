@@ -1,3 +1,5 @@
+![Site Word Counter banner](.wordpress-org/banner-1544x500.png)
+
 # Site Word Counter
 
 Site Word Counter is a WordPress block that shows the total number of words published across a site.

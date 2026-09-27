@@ -10,12 +10,12 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { useCallback, useEffect, useMemo, useState } from '@wordpress/element';
 import { store as noticesStore } from '@wordpress/notices';
 import { ThemeProvider } from '@wordpress/theme';
-import { paragraph } from '@wordpress/icons';
 import { Card, Icon, Skeleton, Stack } from '@wordpress/ui';
 
 /**
  * Internal dependencies
  */
+import tallyIcon from '../icon';
 import PlacementCard from './placement-card';
 import PostTypesControl from './post-types-control';
 import StatusCard from './status-card';
@@ -110,7 +110,7 @@ export default function SettingsPage() {
 			<div className="site-word-counter-settings__root">
 				<Page
 					hasPadding
-					visual={ <Icon icon={ paragraph } /> }
+					visual={ <Icon icon={ tallyIcon } /> }
 					title={ __( 'Site Word Counter', 'site-word-counter' ) }
 					subTitle={ __(
 						'Count your published words and show them off across your site.',

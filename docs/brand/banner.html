@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Site Word Counter banner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+	:root { --w: 1544px; --h: 500px; }
+	* { box-sizing: border-box; margin: 0; }
+	html, body { width: var(--w); height: var(--h); overflow: hidden; background: #060a18; }
+	body { font-family: Inter, -apple-system, sans-serif; position: relative; }
+	.glow { position: absolute; border-radius: 50%; filter: blur(80px); }
+	.glow.a { width: 760px; height: 520px; right: -60px; top: -40px; background: radial-gradient(circle, rgba(30, 110, 255, .38), transparent 70%); }
+	.glow.b { width: 420px; height: 320px; right: 420px; bottom: -180px; background: radial-gradient(circle, rgba(255, 150, 40, .22), transparent 70%); }
+	.copy { position: absolute; left: 100px; top: 70px; }
+	h1 { font-size: 118px; line-height: 1.02; font-weight: 800; letter-spacing: -0.035em; color: #fff; }
+	h1 span { background: linear-gradient(90deg, #1f78ff, #36e2ff); -webkit-background-clip: text; color: transparent; }
+	p { margin-top: 26px; font-size: 30px; line-height: 1.35; font-weight: 500; color: #c3c9d8; }
+	.spark { position: absolute; left: 50px; top: 432px; width: 272px; height: 2px; background: linear-gradient(90deg, transparent, #ff9a3c); }
+	.spark::after { content: ""; position: absolute; right: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: #ffb35c; box-shadow: 0 0 12px 4px rgba(255, 154, 60, .7); }
+
+	.stage { position: absolute; right: 84px; top: 50px; width: 680px; height: 400px; }
+	.page { position: absolute; inset: 0; border-radius: 26px; border: 1.5px solid rgba(80, 150, 255, .45); background: linear-gradient(180deg, rgba(20, 34, 72, .75), rgba(10, 16, 36, .9)); box-shadow: 0 0 0 1px rgba(40, 110, 255, .15), 0 0 60px rgba(30, 110, 255, .25) inset; overflow: hidden; }
+	.lines { position: absolute; left: 56px; right: 56px; top: 50px; }
+	.line { height: 12px; border-radius: 6px; background: rgba(120, 160, 230, .22); margin-bottom: 16px; }
+	.line.title { height: 20px; width: 55%; background: rgba(150, 190, 255, .32); margin-bottom: 26px; }
+	.footer { position: absolute; left: 0; right: 0; bottom: 0; height: 170px; border-top: 1.5px solid rgba(80, 150, 255, .35); background: linear-gradient(180deg, rgba(25, 60, 140, .28), rgba(10, 20, 50, .2)); display: flex; align-items: center; justify-content: center; gap: 18px; }
+	.num { font-size: 84px; font-weight: 800; letter-spacing: -0.03em; color: #eaf6ff; text-shadow: 0 0 18px rgba(54, 226, 255, .85), 0 0 48px rgba(31, 120, 255, .8); font-variant-numeric: tabular-nums; }
+	.label { font-size: 30px; font-weight: 500; color: #9fb3d8; line-height: 1.15; }
+	.label b { color: #ffb35c; font-weight: 700; }
+	.ring { position: absolute; inset: -14px; border-radius: 36px; border: 2px solid transparent; background: linear-gradient(120deg, rgba(54, 226, 255, .9), rgba(31, 120, 255, .15) 35%, rgba(31, 120, 255, .1) 65%, rgba(255, 154, 60, .8)) border-box; -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; filter: drop-shadow(0 0 10px rgba(54, 180, 255, .7)); }
+	.beam { position: absolute; left: 50%; bottom: 0; width: 520px; height: 140px; transform: translateX(-50%); background: radial-gradient(ellipse at 50% 100%, rgba(54, 200, 255, .45), transparent 70%); }
+	.word { position: absolute; font-size: 20px; font-weight: 500; color: rgba(160, 200, 255, .55); letter-spacing: .02em; }
+	.dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #7fdcff; box-shadow: 0 0 10px 3px rgba(54, 200, 255, .8); }
+	.dot.o { background: #ffc07a; box-shadow: 0 0 10px 3px rgba(255, 154, 60, .8); }
+</style>
+</head>
+<body>
+	<div class="glow a"></div>
+	<div class="glow b"></div>
+	<div class="copy">
+		<h1>Site Word<br><span>Counter</span></h1>
+		<p>Show off every word<br>you’ve ever published</p>
+	</div>
+	<div class="spark"></div>
+	<div class="word" style="left: 628px; top: 118px; opacity: .5">because</div>
+	<div class="word" style="left: 664px; top: 202px; opacity: .35">writing</div>
+	<div class="word" style="left: 612px; top: 300px; opacity: .45">every</div>
+	<div class="dot" style="left: 668px; top: 168px"></div>
+	<div class="dot o" style="left: 700px; top: 262px"></div>
+	<div class="dot" style="left: 668px; top: 360px; opacity: .6"></div>
+	<div class="stage">
+		<div class="ring"></div>
+		<div class="page">
+			<div class="lines">
+				<div class="line title"></div>
+				<div class="line"></div>
+				<div class="line" style="width: 92%"></div>
+				<div class="line" style="width: 96%"></div>
+				<div class="line" style="width: 70%"></div>
+			</div>
+			<div class="beam"></div>
+			<div class="footer">
+				<div class="num">33,895</div>
+				<div class="label">words published<br>since <b>2019</b></div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

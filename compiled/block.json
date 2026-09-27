@@ -5,7 +5,6 @@
   "version": "1.0.0",
   "title": "Site Word Counter",
   "category": "widgets",
-  "icon": "editor-paragraph",
   "description": "Shows the total number of words published across your site.",
   "keywords": [
     "word count",
