@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @see https://developer.wordpress.org/reference/functions/register_block_type/
  */
 function site_word_counter_block_init() {
-	register_block_type( __DIR__ . '/build/' );
+	register_block_type( __DIR__ . '/compiled/' );
 }
 add_action( 'init', 'site_word_counter_block_init' );
 

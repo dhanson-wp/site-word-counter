@@ -1,18 +1,22 @@
-
-  {
+{
 	"name": "site-word-counter",
 	"version": "0.1.0",
-	"description": "A powerful block that calculates and displays the total number of words published across your entire WordPress site.",
-	"author": "WordPress Telex",
+	"description": "A block that shows the total number of words published across your site.",
+	"author": "Derek Hanson",
 	"license": "GPL-2.0-or-later",
-	"main": "build/index.js",
+	"private": true,
+	"main": "compiled/index.js",
 	"scripts": {
-		"build": "wp-scripts build",
+		"build": "wp-scripts build --webpack-copy-php --output-path=compiled",
+		"start": "wp-scripts start --webpack-copy-php --output-path=compiled",
 		"format": "wp-scripts format",
-		"lint:css": "wp-scripts lint-style",
-		"lint:js": "wp-scripts lint-js",
+		"lint:css": "wp-scripts lint-style \"src/**/*.scss\"",
+		"lint:js": "wp-scripts lint-js src",
+		"lint:php": "composer run phpcs",
 		"packages-update": "wp-scripts packages-update",
-		"plugin-zip": "wp-scripts plugin-zip",
-		"start": "wp-scripts start"
+		"plugin-zip": "npx pressship pack ."
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "36.0.0"
 	}
 }

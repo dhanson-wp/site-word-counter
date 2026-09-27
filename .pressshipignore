@@ -1,0 +1,17 @@
+.github/
+.wp-playground/
+docs/
+node_modules/
+src/
+vendor/
+build/
+CLAUDE.md
+PROMPT.md
+README.md
+composer.json
+composer.lock
+package.json
+package-lock.json
+phpcs.xml.dist
+.distignore
+artefact.xml
