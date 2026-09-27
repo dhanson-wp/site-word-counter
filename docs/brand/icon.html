@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Site Word Counter icon</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
+<style>
+	* { box-sizing: border-box; margin: 0; }
+	html, body { width: 512px; height: 512px; overflow: hidden; background: transparent; }
+	body { font-family: Inter, -apple-system, sans-serif; position: relative; }
+	.tile { position: absolute; inset: 16px; border-radius: 104px; background: linear-gradient(160deg, #121c38, #070b18); border: 3px solid rgba(90, 150, 255, .32); overflow: hidden; }
+	.tile::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 50% 40%, rgba(30, 110, 255, .42), transparent 60%); }
+	.mark { position: absolute; left: 0; right: 0; top: 58px; text-align: center; font-family: 'Libre Baskerville', Georgia, serif; font-size: 260px; font-weight: 700; line-height: 1; color: #eef8ff; text-shadow: 0 0 26px rgba(54, 226, 255, .95), 0 0 70px rgba(31, 120, 255, .95); }
+	.count { position: absolute; left: 0; right: 0; bottom: 66px; display: flex; justify-content: center; gap: 20px; }
+	.count i { display: block; width: 28px; height: 28px; border-radius: 50%; }
+	.count i:nth-child(1) { background: #36e2ff; box-shadow: 0 0 20px 6px rgba(54, 226, 255, .7); }
+	.count i:nth-child(2) { background: #5fb8ff; box-shadow: 0 0 20px 6px rgba(80, 160, 255, .6); }
+	.count i:nth-child(3) { background: #ffb35c; box-shadow: 0 0 20px 6px rgba(255, 154, 60, .75); }
+</style>
+</head>
+<body>
+	<div class="tile">
+		<div class="mark">¶</div>
+		<div class="count"><i></i><i></i><i></i></div>
+	</div>
+</body>
+</html>
