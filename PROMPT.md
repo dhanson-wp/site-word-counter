@@ -9,7 +9,7 @@ You're taking Site Word Counter from its Telex export (0.1.0) to a 1.0.0 release
 Before you write code:
 
 1. Read `CLAUDE.md` and `docs/upgrade-spec.md` in full.
-2. Load the `wordpress-plugin-development` and `wordpress-blocks` skills, plus `wordpress-dataviews`, `wordpress-core-data`, and `wpds` before the settings page story. Check any block.json, block supports, script module, DataForm, or `@wordpress/ui` claim against them and the `wp-devdocs` MCP (current handbook, block editor, and REST docs) rather than memory. If the WPDS MCP server is connected, it's the source of truth for `@wordpress/ui` and design tokens.
+2. Load the `wordpress-plugin-development` and `wordpress-blocks` skills, plus `wordpress-dataviews`, `wordpress-core-data`, and `wpds` before the settings page story. Check any block.json, block supports, script module, DataForm, or `@wordpress/ui` claim against them and the `wp-devdocs` MCP (current handbook, block editor, and REST docs) rather than memory. If the WPDS MCP server is connected, it's the source of truth for `@wordpress/ui` and design tokens. The skills were written for 6.9 and 7.0; where they disagree with the 7.1 docs linked in the spec, the docs win.
 3. Confirm the test site is running (`studio site status` from `~/Studio/site-word-counter`) and that the "Counter test" page at http://localhost:8918/counter-test/ renders a number.
 
 Then work through the spec's ten stories in order:

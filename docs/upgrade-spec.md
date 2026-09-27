@@ -33,7 +33,7 @@ The block stays what the original post describes: a number that looks like plain
 | Block name | `telex/block-site-word-counter` | `site-word-counter/site-word-counter` |
 | PHP prefix | none | `site_word_counter_` (functions), `SITE_WORD_COUNTER_` (constants) |
 | Author | WordPress Telex | Derek Hanson |
-| Contributors (readme) | WordPress Telex | Derek's WordPress.org username (ask) |
+| Contributors (readme) | WordPress Telex | `dhansondesigns` |
 | Build output | `build/` | `compiled/` |
 | Version | 0.1.0 | 1.0.0 |
 
@@ -117,12 +117,18 @@ A React screen at **Settings > Word Counter**, not a top-level menu item.
 - **Options.** Registered with `register_setting()` in the `site_word_counter` group, each with a `sanitize_callback`, a default, and `show_in_rest` with a schema, so the screen saves through `/wp/v2/settings`:
   - `site_word_counter_post_types`: array of public post type slugs, default `[ "post", "page" ]`. Sanitize against `get_post_types( array( 'public' => true ) )`, and never save an empty list (fall back to the default).
   - `site_word_counter_disable_animation`: boolean, default `false`. When true, no counter on the site animates, whatever each block says.
-- **Screen.** Built with `@wordpress/dataviews` (`DataForm`) and `@wordpress/components`, loading and saving the site entity through `@wordpress/core-data` (`useEntityRecord( 'root', 'site' )` and `saveEditedEntityRecord`). Use the card layout, with a sticky Save button and a success or error snackbar. Enqueue its script and styles only on this screen. `DataForm` isn't one of WordPress's registered script handles, so it's bundled; check the bundle size and keep it reasonable.
+- **Screen.** Three layers of the WordPress Design System, each doing one job:
+  - `@wordpress/admin-ui` for the page frame (`Page` and its header), so it looks like the other new admin screens.
+  - `@wordpress/dataviews` (`DataForm`, card layout) for the form, loading and saving the site entity through `@wordpress/core-data` (`useEntityRecord( 'root', 'site' )` and `saveEditedEntityRecord`).
+  - `@wordpress/ui` for anything else (`Stack` for layout, and its buttons and notices where they exist), wrapped in `ThemeProvider` seeded with `getAdminThemeColors()` from `@wordpress/admin-ui`, so the screen follows the user's admin color scheme.
+  - A sticky Save button, and a success or error notice after saving.
+- **Bundling.** `@wordpress/ui`, `@wordpress/admin-ui`, and `@wordpress/dataviews` aren't `window.wp` globals, so they're bundled into this screen's script. `@wordpress/ui` is marked experimental, so pin exact versions in `package.json` (no `^`) and upgrade on purpose. Because they're bundled, a WordPress update can't break the screen. Enqueue the script and styles only on this screen, and keep the bundle size reasonable.
+- **Styles.** Make the screen's stylesheet depend on `wp-components`. For design tokens, depend on the `wp-theme` stylesheet when it's registered (WordPress 7.1 and later), and otherwise enqueue the tokens CSS bundled from `@wordpress/theme`. Add `isolation: isolate` to the screen's root element. If `@wordpress/ui` and `@wordpress/components` overlays are both bundled, call `useEnableWpCompatOverlaySlot()` once at the root.
 - **Sections:**
   1. **What counts.** A checkbox list of public post types, with help text saying titles, drafts, and private posts never count.
   2. **Display.** The "Turn off counter animations across the site" toggle, with help text pointing to reduced-motion accessibility.
   3. **Status.** Read only: the current total (formatted), posts counted of posts to count, whether the backfill is running, and when the last full recount ran. A **Recount now** button runs the recount in batches through REST with a progress bar, and the screen stays usable while it runs.
-- **Design system.** Check `@wordpress/ui` (the WordPress Design System package) against the current docs before building. Use it where it's stable and available to plugins, and fall back to `@wordpress/components` where it isn't. Use WordPress design tokens, not custom colors or spacing. Record which one you used, and why, in this spec.
+- **Design system.** Follow the current package docs (https://developer.wordpress.org/block-editor/reference-guides/packages/packages-ui/ and packages-admin-ui/) and Gutenberg's "use recommended components" guidance for which component to use where, since some `@wordpress/components` components are still the recommended choice. Use design tokens, never custom colors or spacing. Note in this spec any component that had to fall back to `@wordpress/components`, and why.
 - **Accessibility.** Every control has a visible label. Progress is announced with `speak()` from `@wordpress/a11y`. It works with the keyboard alone and at 200% zoom.
 
 ### Editor
@@ -148,9 +154,11 @@ A React screen at **Settings > Word Counter**, not a top-level menu item.
 
 ### Requirements
 
-- `Requires at least`: **6.9**, because the settings screen uses `DataForm`'s card layout (6.9+). Confirm it also covers every block support used (check `typography.textAlign`), and don't guess.
+- `Requires at least`: **6.9**, because the settings screen uses `DataForm`'s card layout (6.9+). Confirm it also covers every block support used (check `typography.textAlign`), and don't guess. The block itself is the product, so don't raise the minimum just for the settings screen's looks; the bundled tokens fallback covers 6.9 and 7.0.
 - `Requires PHP`: 7.4.
-- `Tested up to`: the current WordPress release at build time.
+- `Tested up to`: **7.1**, the current release (7.1.2 as of 2026-09-27; confirm it's still current at build time).
+- WordPress 7.1 makes 40px the default height for form controls and ignores `__next40pxDefaultSize` at runtime. Keep that prop and `__nextHasNoMarginBottom` on inspector controls while the plugin supports 6.9 and 7.0, where leaving them off shows deprecation warnings. Don't use `View`'s `css` prop, the removed `Navigation` component, or `__experimentalApplyValueToSides`.
+- The 7.1 changes are in the [WordPress 7.1 Field Guide](https://make.wordpress.org/core/2026/08/05/wordpress-7-1-field-guide/). Check it, and the [Design System theming dev note](https://make.wordpress.org/core/2026/07/31/design-system-theming-in-wordpress-7-1/), before stories 5 and 7.
 
 ## Stories
 
@@ -219,7 +227,7 @@ Work through these ten stories in order, one commit per story. Each story lists 
 - Add a GitHub Actions workflow running lint, PHPCS, and `WordPress/plugin-check-action`.
 - Bump everything to 1.0.0.
 
-**Check:** Plugin Check (`studio wp plugin check site-word-counter` with the Plugin Check plugin installed on the test site) reports no errors. `npx pressship pack .` makes `site-word-counter.zip` with `site-word-counter/` as its top-level folder and no dev files.
+**Check:** Plugin Check (`studio wp plugin check site-word-counter` with the Plugin Check plugin installed on the test site) reports no errors. The plugin works on WordPress 6.9 and 7.1 (switch the test site's version with `studio site set --wp`, or use a Playground). `npx pressship pack .` makes `site-word-counter.zip` with `site-word-counter/` as its top-level folder and no dev files.
 
 ## Test site
 
