@@ -20,6 +20,7 @@ import { useDispatch } from '@wordpress/data';
 /**
  * Internal dependencies
  */
+import tallyIcon from './icon';
 import useTotal from './use-total';
 import CounterPreview from './counter-preview';
 
@@ -110,6 +111,7 @@ export function registerLegacyBlock() {
 		apiVersion: 3,
 		title: __( 'Site Word Counter (legacy)', 'site-word-counter' ),
 		category: 'widgets',
+		icon: tallyIcon,
 		attributes: {
 			enableAnimation: { type: 'boolean', default: true },
 			textAlignment: { type: 'string', default: 'left' },
