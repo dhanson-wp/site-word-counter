@@ -10,16 +10,19 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { useCallback, useEffect, useMemo, useState } from '@wordpress/element';
 import { store as noticesStore } from '@wordpress/notices';
 import { ThemeProvider } from '@wordpress/theme';
-import { Card, Skeleton, Stack } from '@wordpress/ui';
+import { paragraph } from '@wordpress/icons';
+import { Card, Icon, Skeleton, Stack } from '@wordpress/ui';
 
 /**
  * Internal dependencies
  */
+import PlacementCard from './placement-card';
 import PostTypesControl from './post-types-control';
 import StatusCard from './status-card';
 
 const POST_TYPES = 'site_word_counter_post_types';
 const DISABLE_ANIMATION = 'site_word_counter_disable_animation';
+const PLACEMENTS = 'site_word_counter_placements';
 
 const postTypeOptions = window.siteWordCounterSettings?.postTypes ?? [];
 
@@ -107,9 +110,10 @@ export default function SettingsPage() {
 			<div className="site-word-counter-settings__root">
 				<Page
 					hasPadding
+					visual={ <Icon icon={ paragraph } /> }
 					title={ __( 'Site Word Counter', 'site-word-counter' ) }
 					subTitle={ __(
-						'Choose which content counts toward your site’s total words, and how counters behave.',
+						'Count your published words and show them off across your site.',
 						'site-word-counter'
 					) }
 					actions={
@@ -165,6 +169,13 @@ export default function SettingsPage() {
 										/>
 									</Card.Content>
 								</Card.Root>
+								<PlacementCard
+									value={ settings[ PLACEMENTS ] }
+									formatted={ status?.formatted ?? '…' }
+									onChange={ ( value ) =>
+										edit( PLACEMENTS, value )
+									}
+								/>
 								<Card.Root>
 									<Card.Header>
 										<Card.Title>

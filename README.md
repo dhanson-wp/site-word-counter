@@ -13,6 +13,7 @@ By itself it's just a number, styled with the block editor's own typography, col
 - A count-up animation that starts when the counter scrolls into view, respects `prefers-reduced-motion`, and gives screen readers the final number.
 - **Settings › Word Counter**, built with the WordPress Design System: choose post types, turn off animations site-wide, see counting status, and recount.
 - Works with any custom post type visitors can see, like movie reviews or recipes.
+- On block themes, adds "33,895 words published since 2019." to the footer or below each post with Block Hooks, with Preview and edit links to the Site Editor, plus two block patterns.
 - Filters and WP-CLI commands for developers.
 
 ## Requirements

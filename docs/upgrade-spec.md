@@ -165,7 +165,7 @@ A React screen at **Settings > Word Counter**, not a top-level menu item.
 
 ## Stories
 
-Work through these ten stories in order, one commit per story. Each story lists how to check it.
+Work through these stories in order, one commit per story. Each story lists how to check it.
 
 ### 1. Tooling and baseline
 
@@ -231,6 +231,23 @@ Work through these ten stories in order, one commit per story. Each story lists 
 - Bump everything to 1.0.0.
 
 **Check:** Plugin Check (`studio wp plugin check site-word-counter` with the Plugin Check plugin installed on the test site) reports no errors. The plugin works on WordPress 7.1 (switch the test site's version with `studio site set --wp`, or use a Playground). `npx pressship pack .` makes `site-word-counter.zip` with `site-word-counter/` as its top-level folder and no dev files.
+
+### 11. Placement and patterns
+
+Added after the first ten stories, on the `feature/placement` branch. The settings screen follows Jetpack Newsletter's newer settings screen: visual tiles that show where something lands.
+
+- **Option.** `site_word_counter_placements`, an array of `footer` and `after_posts`, default empty, registered with `show_in_rest` and an enum schema. Uninstall deletes it.
+- **What gets added.** A Row (`core/group`, flex layout) holding the counter and a Paragraph: "33,895 words published since 2019." The year is the year of the earliest published post of the counted types, cached with the total and cleared with it. The same markup is the "Words published since" pattern, so there's one source.
+- **How it's added.** Block Hooks. `hooked_block_types` hooks `site-word-counter/site-word-counter` as `last_child` of the footer template part (context is a `wp_template_part` with area `footer`), and `after` `core/post-content` in the `single-post` or `single` template. `hooked_block_site-word-counter/site-word-counter` swaps the bare block for the Row. WordPress tracks the original block name in `ignoredHookedBlocks`, so a line someone deletes in the Site Editor stays deleted.
+- **No duplicates.** Skip insertion when the template or part already contains a Site Word Counter block (new or legacy name).
+- **Classic themes.** No template parts, so the card explains that and points to the patterns. Nothing is inserted.
+- **Settings card, "Show it on your site".** Under a small uppercase label, two tiles side by side: a wireframe of a page with the line in its footer, and a wireframe of a post with the line after its content. Each tile is a label wrapping a checkbox in its corner, the wireframe (`aria-hidden`), and a caption, so the whole tile toggles it. Under each caption, a **Preview and edit** link opens the footer template part or single template in the Site Editor (`site-editor.php?postType=…&postId={theme}//{slug}&canvas=edit`), as Jetpack does. Help text says that once the line is edited and saved in the Site Editor, it's part of the template, so turning the tile off won't remove it.
+- **Header.** The `admin-ui` Page gets a `visual` icon (the paragraph icon, matching the block) and the description "Count your published words and show them off across your site."
+- **Patterns.** A "Site Word Counter" pattern category with "Words published since" (the Row) and "Word count stat" (a large counter over a small "words published" label, for About pages).
+
+(Built: the footer version is wrapped in a full-width constrained group so it takes the theme's page padding, and the Row copies the footer's own width: `wide` when the footer's top-level group has wide content (Twenty Twenty-Five), the content column otherwise (Ipsum). Themes like Ipsum build their single template from a pattern, so a `core/post-content` anchor inside a pattern the single template uses also counts as "below posts". Tested on Ipsum, the upcoming default theme, and Twenty Twenty-Five. **Preview and edit** for the footer finds the footer part the index template actually includes, because Twenty Twenty-Five has three footer-area parts. When a line was deleted in the Site Editor, the tile says so, based on the template's `_wp_ignored_hooked_blocks` meta. The tiles are native checkboxes inside labels, since `@wordpress/ui`'s checkbox isn't recommended yet.)
+
+**Check:** on Twenty Twenty-Five, turning on Footer adds the line with 34 and the first post's year to every page's footer, and turning it off removes it. Below posts adds it after single posts only, not pages. The line shows in the Site Editor's footer; deleting it there and saving keeps it gone. A footer that already has a counter gets no second one. On a classic theme, the card shows the explanation and nothing is inserted. Both patterns are registered. The tiles work with the keyboard alone. Checks pass on 7.1 with Ipsum and Twenty Twenty-Five.
 
 ## Test site
 
