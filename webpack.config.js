@@ -35,6 +35,22 @@ const withSettingsScreen = ( config ) => ( {
 	),
 } );
 
-module.exports = Array.isArray( defaultConfig )
-	? [ withSettingsScreen( defaultConfig[ 0 ] ), ...defaultConfig.slice( 1 ) ]
-	: withSettingsScreen( defaultConfig );
+// The front-end view module is registered and enqueued from PHP only when a
+// counter animates, so it's its own module entry rather than a block.json
+// viewScriptModule.
+const withViewModule = ( config ) => ( {
+	...config,
+	entry: async () => {
+		const defaultEntries =
+			typeof config.entry === 'function'
+				? await config.entry()
+				: config.entry;
+
+		return { ...defaultEntries, view: './src/view.js' };
+	},
+} );
+
+module.exports = [
+	withSettingsScreen( defaultConfig[ 0 ] ),
+	withViewModule( defaultConfig[ 1 ] ),
+];

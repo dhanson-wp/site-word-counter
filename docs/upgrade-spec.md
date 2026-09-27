@@ -141,7 +141,7 @@ A React screen at **Settings > Word Counter**, not a top-level menu item.
 
 ### Front end
 
-- `view.js` becomes a `viewScriptModule` with no dependencies (no Interactivity API needed for this).
+- `view.js` becomes a script module with no dependencies (no Interactivity API needed for this). (Built: it's its own module entry in `webpack.config.js`, registered as `site-word-counter/view` and enqueued from the render function only when a counter animates, because a `block.json` `viewScriptModule` always loads.)
 - Do nothing if `enableAnimation` is off, the site-wide `site_word_counter_disable_animation` option is on, or `matchMedia( '(prefers-reduced-motion: reduce)' )` matches. When animation is off for either setting, `render.php` doesn't enqueue the view module at all.
 - In the editor, when the site-wide switch is on, the block's animation toggle is disabled with help text saying animations are turned off in Settings > Word Counter, and linking there.
 - Start the count-up when the block first scrolls into view (`IntersectionObserver`, threshold around 0.5), once per block.

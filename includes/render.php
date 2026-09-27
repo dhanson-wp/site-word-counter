@@ -55,6 +55,25 @@ function site_word_counter_format_number( $number, $format = 'full' ) {
 }
 
 /**
+ * Registers the front-end view module. It's enqueued only by counters that animate.
+ */
+function site_word_counter_register_view_module() {
+	$asset_file = SITE_WORD_COUNTER_DIR . 'compiled/view.asset.php';
+	$asset      = file_exists( $asset_file ) ? require $asset_file : array(
+		'dependencies' => array(),
+		'version'      => SITE_WORD_COUNTER_VERSION,
+	);
+
+	wp_register_script_module(
+		'site-word-counter/view',
+		SITE_WORD_COUNTER_URL . 'compiled/view.js',
+		$asset['dependencies'],
+		$asset['version']
+	);
+}
+add_action( 'init', 'site_word_counter_register_view_module' );
+
+/**
  * Whether counter animations are turned off for the whole site.
  *
  * @return bool
@@ -82,6 +101,7 @@ function site_word_counter_render_counter( $attributes ) {
 
 	if ( $animate ) {
 		$extra['data-animate'] = 'true';
+		wp_enqueue_script_module( 'site-word-counter/view' );
 
 		// The screen reader copy never animates; the visible copy is decorative.
 		$number = sprintf(
