@@ -253,12 +253,54 @@ function site_word_counter_counter_text_attrs( $text_attrs ) {
  * @param array[] $blocks Parsed blocks.
  * @return array Text attributes: fontSize, textColor, fontFamily, and
  *               style.typography and style.color.text. Falls back to the
- *               small font size when there's no text block.
+ *               small font size when there's no text block and the theme
+ *               has one, and to the theme's default text otherwise.
  */
 function site_word_counter_text_attrs( $blocks ) {
 	$attrs = site_word_counter_find_last_text_attrs( $blocks );
+	if ( null !== $attrs ) {
+		return $attrs;
+	}
 
-	return null === $attrs ? array( 'fontSize' => 'small' ) : $attrs;
+	$font_sizes = site_word_counter_presets( array( 'typography', 'fontSizes' ), array( 'typography', 'defaultFontSizes' ) );
+
+	return isset( $font_sizes['small'] ) ? array( 'fontSize' => 'small' ) : array();
+}
+
+/**
+ * Returns the presets the site can use for a setting, by slug, from core's
+ * defaults (unless the theme turns them off), the theme, and Global Styles.
+ *
+ * @param string[] $path         Path to the presets in the settings, such as
+ *                               array( 'typography', 'fontSizes' ).
+ * @param string[] $default_path Path to the setting that turns core's
+ *                               defaults on or off.
+ * @return array[] Presets, keyed by slug.
+ */
+function site_word_counter_presets( $path, $default_path ) {
+	$by_origin = wp_get_global_settings( $path );
+	if ( ! is_array( $by_origin ) ) {
+		return array();
+	}
+	if ( wp_is_numeric_array( $by_origin ) ) {
+		$by_origin = array( 'theme' => $by_origin );
+	}
+
+	$use_defaults = false !== wp_get_global_settings( $default_path );
+	$presets      = array();
+
+	foreach ( array( 'default', 'theme', 'custom' ) as $origin ) {
+		if ( 'default' === $origin && ! $use_defaults ) {
+			continue;
+		}
+		foreach ( (array) ( $by_origin[ $origin ] ?? array() ) as $preset ) {
+			if ( ! empty( $preset['slug'] ) ) {
+				$presets[ $preset['slug'] ] = $preset;
+			}
+		}
+	}
+
+	return $presets;
 }
 
 /**
