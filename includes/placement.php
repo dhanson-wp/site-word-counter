@@ -99,36 +99,306 @@ add_action( 'site_word_counter_total_cleared', 'site_word_counter_clear_first_ye
 /**
  * Markup for "33,895 words published since 2019." as a Row.
  *
- * @param string $align Block alignment for the Row, such as "wide", or empty.
+ * @param string $align      Block alignment for the Row, such as "wide", or empty.
+ * @param array  $text_attrs Text attributes for the count and the words, from
+ *                           site_word_counter_text_attrs(). Empty uses the theme's defaults.
  * @return string Block markup.
  */
-function site_word_counter_line_markup( $align = '' ) {
+function site_word_counter_line_markup( $align = '', $text_attrs = array() ) {
 	$text = sprintf(
 		/* translators: %s: the year of the site's first published post. */
 		__( 'words published since %s.', 'site-word-counter' ),
 		site_word_counter_first_year()
 	);
 
-	$align_attr  = $align ? '"align":"' . esc_attr( $align ) . '",' : '';
-	$align_class = $align ? ' align' . sanitize_html_class( $align ) : '';
+	$row_attrs = array(
+		'metadata'  => array( 'name' => __( 'Words published since', 'site-word-counter' ) ),
+		'className' => 'site-word-counter-line',
+		'style'     => array( 'spacing' => array( 'blockGap' => '0.3em' ) ),
+		'layout'    => array(
+			'type'              => 'flex',
+			'flexWrap'          => 'wrap',
+			'verticalAlignment' => 'baseline',
+		),
+	);
+	$row_class = 'wp-block-group site-word-counter-line';
 
-	return '<!-- wp:group {"metadata":{"name":"' . esc_attr__( 'Words published since', 'site-word-counter' ) . '"},' . $align_attr . '"className":"site-word-counter-line","style":{"spacing":{"blockGap":"0.3em"}},"layout":{"type":"flex","flexWrap":"wrap","verticalAlignment":"baseline"}} -->'
-		. '<div class="wp-block-group' . $align_class . ' site-word-counter-line">'
-		. '<!-- wp:' . SITE_WORD_COUNTER_BLOCK_NAME . ' /-->'
-		. '<!-- wp:paragraph --><p>' . esc_html( $text ) . '</p><!-- /wp:paragraph -->'
-		. '</div><!-- /wp:group -->';
+	if ( $align ) {
+		$row_attrs = array( 'align' => $align ) + $row_attrs;
+		$row_class = 'wp-block-group align' . sanitize_html_class( $align ) . ' site-word-counter-line';
+	}
+
+	// Centered or right-aligned footer text moves the whole Row with it.
+	$text_align = $text_attrs['style']['typography']['textAlign'] ?? '';
+	if ( in_array( $text_align, array( 'center', 'right' ), true ) ) {
+		$row_attrs['layout']['justifyContent'] = $text_align;
+	}
+
+	return get_comment_delimited_block_content(
+		'core/group',
+		$row_attrs,
+		'<div class="' . esc_attr( $row_class ) . '">'
+			. get_comment_delimited_block_content( SITE_WORD_COUNTER_BLOCK_NAME, site_word_counter_counter_text_attrs( $text_attrs ), '' )
+			. site_word_counter_paragraph_markup( $text, $text_attrs )
+			. '</div>'
+	);
+}
+
+/**
+ * Markup for a Paragraph block with text attributes, saved the way the
+ * editor saves it so the block stays valid.
+ *
+ * @param string $text       Plain text.
+ * @param array  $text_attrs Text attributes, from site_word_counter_text_attrs().
+ * @return string Block markup.
+ */
+function site_word_counter_paragraph_markup( $text, $text_attrs = array() ) {
+	$classes    = array();
+	$typography = $text_attrs['style']['typography'] ?? array();
+
+	if ( ! empty( $typography['textAlign'] ) ) {
+		$classes[] = 'has-text-align-' . sanitize_html_class( $typography['textAlign'] );
+		unset( $typography['textAlign'] );
+	}
+	if ( ! empty( $text_attrs['textColor'] ) ) {
+		$classes[] = 'has-' . _wp_to_kebab_case( $text_attrs['textColor'] ) . '-color';
+	}
+	if ( ! empty( $text_attrs['textColor'] ) || ! empty( $text_attrs['style']['color']['text'] ) ) {
+		$classes[] = 'has-text-color';
+	}
+	if ( ! empty( $text_attrs['fontFamily'] ) ) {
+		$classes[] = 'has-' . _wp_to_kebab_case( $text_attrs['fontFamily'] ) . '-font-family';
+	}
+	if ( ! empty( $text_attrs['fontSize'] ) ) {
+		$classes[] = 'has-' . _wp_to_kebab_case( $text_attrs['fontSize'] ) . '-font-size';
+	}
+
+	$styles = wp_style_engine_get_styles(
+		array(
+			'typography' => $typography,
+			'color'      => array_intersect_key( $text_attrs['style']['color'] ?? array(), array( 'text' => true ) ),
+		)
+	);
+	if ( ! empty( $styles['classnames'] ) ) {
+		$classes = array_merge( $classes, explode( ' ', $styles['classnames'] ) );
+	}
+
+	$class_attr = $classes ? ' class="' . esc_attr( implode( ' ', array_unique( $classes ) ) ) . '"' : '';
+	$style_attr = ! empty( $styles['css'] ) ? ' style="' . esc_attr( $styles['css'] ) . '"' : '';
+
+	return get_comment_delimited_block_content(
+		'core/paragraph',
+		$text_attrs,
+		'<p' . $class_attr . $style_attr . '>' . esc_html( $text ) . '</p>'
+	);
+}
+
+/**
+ * Narrows text attributes to what the counter block supports.
+ *
+ * @param array $text_attrs Text attributes, from site_word_counter_text_attrs().
+ * @return array Counter block attributes.
+ */
+function site_word_counter_counter_text_attrs( $text_attrs ) {
+	$attrs = array_intersect_key(
+		$text_attrs,
+		array(
+			'fontSize'   => true,
+			'textColor'  => true,
+			'fontFamily' => true,
+		)
+	);
+
+	$typography = array_intersect_key(
+		$text_attrs['style']['typography'] ?? array(),
+		array(
+			'fontSize'      => true,
+			'lineHeight'    => true,
+			'fontStyle'     => true,
+			'fontWeight'    => true,
+			'letterSpacing' => true,
+			'textAlign'     => true,
+		)
+	);
+	if ( $typography ) {
+		$attrs['style']['typography'] = $typography;
+	}
+	if ( ! empty( $text_attrs['style']['color']['text'] ) ) {
+		$attrs['style']['color']['text'] = $text_attrs['style']['color']['text'];
+	}
+
+	return $attrs;
+}
+
+/**
+ * Finds the text attributes of the last text block, so the line can match
+ * the footer's own small print.
+ *
+ * Walks into inner blocks and patterns, carries down what a group sets for
+ * the text inside it, and skips a line that's already there.
+ *
+ * @param array[] $blocks Parsed blocks.
+ * @return array Text attributes: fontSize, textColor, fontFamily, and
+ *               style.typography and style.color.text. Falls back to the
+ *               small font size when there's no text block.
+ */
+function site_word_counter_text_attrs( $blocks ) {
+	$attrs = site_word_counter_find_last_text_attrs( $blocks );
+
+	return null === $attrs ? array( 'fontSize' => 'small' ) : $attrs;
+}
+
+/**
+ * Returns the text attributes of the last Paragraph or Site Tagline block,
+ * in reading order, merged over what its parent groups set.
+ *
+ * @param array[] $blocks    Parsed blocks.
+ * @param array   $inherited Text attributes set by parent blocks.
+ * @return array|null Text attributes, or null when there's no text block.
+ */
+function site_word_counter_find_last_text_attrs( $blocks, $inherited = array() ) {
+	$found = null;
+
+	foreach ( $blocks as $block ) {
+		$name = $block['blockName'] ?? '';
+		if ( ! $name || SITE_WORD_COUNTER_BLOCK_NAME === $name ) {
+			continue;
+		}
+
+		if ( str_contains( (string) ( $block['attrs']['className'] ?? '' ), 'site-word-counter-line' ) ) {
+			continue;
+		}
+
+		$own = site_word_counter_block_text_attrs( $block );
+
+		if ( in_array( $name, array( 'core/paragraph', 'core/site-tagline' ), true ) ) {
+			$found = site_word_counter_merge_text_attrs( $inherited, $own );
+			continue;
+		}
+
+		if ( 'core/pattern' === $name ) {
+			$inner = site_word_counter_expand_patterns( array( $block ) );
+			if ( array( $block ) === $inner ) {
+				continue;
+			}
+		} else {
+			$inner = $block['innerBlocks'] ?? array();
+		}
+
+		$last = $inner ? site_word_counter_find_last_text_attrs( $inner, site_word_counter_merge_text_attrs( $inherited, $own ) ) : null;
+		if ( null !== $last ) {
+			$found = $last;
+		}
+	}
+
+	return $found;
+}
+
+/**
+ * Picks the attributes that style text out of a block's attributes.
+ *
+ * @param array $block Parsed block.
+ * @return array Text attributes.
+ */
+function site_word_counter_block_text_attrs( $block ) {
+	$source = $block['attrs'] ?? array();
+	$attrs  = array_intersect_key(
+		$source,
+		array(
+			'fontSize'   => true,
+			'textColor'  => true,
+			'fontFamily' => true,
+		)
+	);
+
+	// Only the properties that style text, not layout ones like text columns.
+	$typography = array_intersect_key(
+		$source['style']['typography'] ?? array(),
+		array(
+			'fontSize'       => true,
+			'lineHeight'     => true,
+			'fontStyle'      => true,
+			'fontWeight'     => true,
+			'letterSpacing'  => true,
+			'textTransform'  => true,
+			'textDecoration' => true,
+			'textAlign'      => true,
+		)
+	);
+
+	// Paragraphs saved before text alignment became a block support use "align",
+	// and some blocks, like Site Tagline, still have a textAlign attribute.
+	if ( empty( $typography['textAlign'] ) ) {
+		$typography['textAlign'] = $source['textAlign'] ?? ( 'core/paragraph' === $block['blockName'] ? ( $source['align'] ?? '' ) : '' );
+	}
+	if ( ! in_array( $typography['textAlign'], array( 'left', 'center', 'right' ), true ) ) {
+		unset( $typography['textAlign'] );
+	}
+
+	if ( $typography ) {
+		$attrs['style']['typography'] = $typography;
+	}
+
+	// A preset in the custom color becomes the text color attribute, which the editor saves as classes.
+	$color = $source['style']['color']['text'] ?? '';
+	if ( is_string( $color ) && str_starts_with( $color, 'var:preset|color|' ) ) {
+		$attrs['textColor'] = substr( $color, strlen( 'var:preset|color|' ) );
+	} elseif ( is_string( $color ) && '' !== $color && empty( $attrs['textColor'] ) ) {
+		$attrs['style']['color']['text'] = $color;
+	}
+
+	return $attrs;
+}
+
+/**
+ * Merges a block's text attributes over its parents', where a preset and a
+ * custom value for the same property replace each other.
+ *
+ * @param array $inherited Text attributes from parent blocks.
+ * @param array $own       The block's own text attributes.
+ * @return array
+ */
+function site_word_counter_merge_text_attrs( $inherited, $own ) {
+	if ( isset( $own['style']['typography']['fontSize'] ) ) {
+		unset( $inherited['fontSize'] );
+	}
+	if ( isset( $own['fontSize'] ) ) {
+		unset( $inherited['style']['typography']['fontSize'] );
+	}
+	if ( isset( $own['style']['color']['text'] ) ) {
+		unset( $inherited['textColor'] );
+	}
+	if ( isset( $own['textColor'] ) ) {
+		unset( $inherited['style']['color'] );
+	}
+
+	$merged = array_replace_recursive( $inherited, $own );
+
+	// Leave out anything the unsets above emptied.
+	if ( empty( $merged['style']['typography'] ) ) {
+		unset( $merged['style']['typography'] );
+	}
+	if ( empty( $merged['style']['color'] ) ) {
+		unset( $merged['style']['color'] );
+	}
+	if ( empty( $merged['style'] ) ) {
+		unset( $merged['style'] );
+	}
+
+	return $merged;
 }
 
 /**
  * The footer version of the line: a full-width group that takes the theme's
  * page padding, so the line lines up with the footer content above it.
  *
+ * @param array $text_attrs Text attributes, from site_word_counter_text_attrs().
  * @return string Block markup.
  */
-function site_word_counter_footer_line_markup() {
+function site_word_counter_footer_line_markup( $text_attrs = array() ) {
 	return '<!-- wp:group {"align":"full","style":{"spacing":{"padding":{"bottom":"1.5rem"}}},"layout":{"type":"constrained"}} -->'
 		. '<div class="wp-block-group alignfull" style="padding-bottom:1.5rem">'
-		. site_word_counter_line_markup( site_word_counter_footer_alignment() )
+		. site_word_counter_line_markup( site_word_counter_footer_alignment(), $text_attrs )
 		. '</div><!-- /wp:group -->';
 }
 
@@ -155,16 +425,63 @@ function site_word_counter_footer_alignment() {
 		if ( empty( $block['blockName'] ) ) {
 			continue;
 		}
-		foreach ( $block['innerBlocks'] as $child ) {
-			if ( 'wide' === ( $child['attrs']['align'] ?? '' ) ) {
-				$align = 'wide';
-				break;
-			}
-		}
+		$align = site_word_counter_children_alignment( $block );
 		break;
 	}
 
 	return $align;
+}
+
+/**
+ * Whether a group lays out any of its children wide.
+ *
+ * @param array $block Parsed block.
+ * @return string "wide" or "".
+ */
+function site_word_counter_children_alignment( $block ) {
+	foreach ( $block['innerBlocks'] ?? array() as $child ) {
+		if ( in_array( $child['attrs']['align'] ?? '', array( 'wide', 'full' ), true ) ) {
+			return 'wide';
+		}
+	}
+
+	return '';
+}
+
+/**
+ * Whether the placement filters are paused while the plugin reads a template
+ * or pattern itself, so reading one doesn't add the line to it.
+ *
+ * @param bool|null $pause True to pause, false to resume, null to check.
+ * @return bool
+ */
+function site_word_counter_hooks_paused( $pause = null ) {
+	static $paused = false;
+	if ( null !== $pause ) {
+		$paused = (bool) $pause;
+	}
+
+	return $paused;
+}
+
+/**
+ * Returns a registered pattern's content without the line added to it.
+ *
+ * @param string $slug Pattern slug.
+ * @return string Block markup, or an empty string.
+ */
+function site_word_counter_pattern_content( $slug ) {
+	$registry = WP_Block_Patterns_Registry::get_instance();
+	if ( ! $slug || ! $registry->is_registered( $slug ) ) {
+		return '';
+	}
+
+	$was_paused = site_word_counter_hooks_paused();
+	site_word_counter_hooks_paused( true );
+	$pattern = $registry->get_registered( $slug );
+	site_word_counter_hooks_paused( $was_paused );
+
+	return (string) ( $pattern['content'] ?? '' );
 }
 
 /**
@@ -174,14 +491,12 @@ function site_word_counter_footer_alignment() {
  * @return array[]
  */
 function site_word_counter_expand_patterns( $blocks ) {
-	$registry = WP_Block_Patterns_Registry::get_instance();
 	$expanded = array();
 
 	foreach ( $blocks as $block ) {
-		$slug = $block['attrs']['slug'] ?? '';
-		if ( 'core/pattern' === $block['blockName'] && $slug && $registry->is_registered( $slug ) ) {
-			$pattern  = $registry->get_registered( $slug );
-			$expanded = array_merge( $expanded, parse_blocks( $pattern['content'] ) );
+		$content = 'core/pattern' === $block['blockName'] ? site_word_counter_pattern_content( $block['attrs']['slug'] ?? '' ) : '';
+		if ( '' !== $content ) {
+			$expanded = array_merge( $expanded, parse_blocks( $content ) );
 		} else {
 			$expanded[] = $block;
 		}
@@ -373,7 +688,13 @@ function site_word_counter_hooked_block( $parsed_hooked_block, $hooked_block_typ
 		return $parsed_hooked_block;
 	}
 
-	$blocks = parse_blocks( 'footer' === $placement ? site_word_counter_footer_line_markup() : site_word_counter_line_markup() );
+	if ( 'footer' === $placement ) {
+		$markup = site_word_counter_footer_line_markup( site_word_counter_text_attrs( $parsed_anchor_block['innerBlocks'] ?? array() ) );
+	} else {
+		$markup = site_word_counter_line_markup();
+	}
+
+	$blocks = parse_blocks( $markup );
 
 	return $blocks[0] ?? $parsed_hooked_block;
 }
