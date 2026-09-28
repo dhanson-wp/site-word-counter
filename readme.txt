@@ -30,6 +30,10 @@ The block is deliberately simple: by itself, it's just a number. Put it in a Row
 
 On block themes, **Settings › Word Counter** can add a line like "33,895 words published since 2019." to your footer, below each post, or both, with the year taken from your first post. Each spot has a **Preview and edit** link that opens it in the Site Editor, where you can reword, restyle, or remove it. Two patterns, "Words published since" and "Word count stat", are in the block inserter for anywhere else.
 
+**In a sentence**
+
+Need the number mid-sentence, like "The day I shared it, it said 23,004. Today it says 37,051."? In any paragraph, heading, list item, quote, or image caption, choose **Word count** from the block toolbar's **More** menu. The number stays current on your site and looks like the rest of your text.
+
 **Settings**
 
 Go to **Settings › Word Counter** to choose which post types count, choose where the word count shows up, turn off counter animations across the site, check the counting status, and recount every post.
@@ -84,6 +88,10 @@ On a block theme, go to **Settings › Word Counter**, tick **Word count in your
 = I deleted the line in the Site Editor. How do I get it back? =
 
 WordPress remembers that you removed it and won't add it again. Open the footer or template in the Site Editor and insert the "Words published since" pattern.
+
+= Can I put the word count inside a sentence? =
+
+Yes. Click where the number should go, open the **More** menu (the chevron) in the block toolbar, and choose **Word count**. It works in paragraphs, headings, list items, quotes, and image captions. Visitors always see the current total. The post keeps the total from when you inserted it, so the sentence still makes sense if you ever turn the plugin off.
 
 = Can I turn off the animation? =
 

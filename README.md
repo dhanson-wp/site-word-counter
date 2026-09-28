@@ -18,6 +18,12 @@ By itself it's just a number, styled with the block editor's own typography, col
 - On block themes, adds "33,895 words published since 2019." to the footer or below each post with Block Hooks, with Preview and edit links to the Site Editor, plus two block patterns.
 - Filters and WP-CLI commands for developers.
 
+## Inline word count
+
+You can also put the live total inside a sentence: "The day I shared it, it said 23,004. Today it says 37,051." In any paragraph, heading, list item, quote, or image caption, open the block toolbar's **More** menu (the chevron) and choose **Word count**. The current total goes in at the cursor, or replaces the selected text.
+
+On the front end, the number is always the current total, and it looks like the rest of the sentence. The post saves the total from when you inserted it, so if the plugin is ever turned off, the sentence still reads fine. To turn a count back into plain text, select it and choose **Word count** again.
+
 ## Download
 
 [Download the latest release](https://github.com/dhanson-wp/site-word-counter/releases/latest/download/site-word-counter.zip), then upload it from **Plugins › Add New › Upload Plugin**.
