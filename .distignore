@@ -24,3 +24,4 @@ artefact.xml
 eslint.config.cjs
 webpack.config.js
 .wordpress-org/
+TODOS.md
