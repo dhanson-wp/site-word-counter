@@ -4,7 +4,7 @@ Tags:              word count, block, statistics, writing, blogging
 Requires at least: 7.1
 Tested up to:      7.1
 Requires PHP:      7.4
-Stable tag:        1.0.2
+Stable tag:        1.1.0
 License:           GPLv2 or later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -109,6 +109,10 @@ No. Counters made with that version keep working. In the editor they show your n
 4. Settings › Word Counter: choose what counts, and add the word count to your footer or below each post.
 
 == Changelog ==
+
+= 1.1.0 =
+* Put your live word count inside a sentence. In any paragraph, heading, list item, quote, or caption, choose Word count from the toolbar's More menu, and the number stays current and looks like the rest of the text.
+* Inline counts get a faint dotted underline in the editor, so you can tell them apart from numbers you typed. Visitors don't see it.
 
 = 1.0.2 =
 * The footer line now matches your theme. It sits inside the footer, right under its last line, and uses the same text size, color, and font as the rest of the footer.
