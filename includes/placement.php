@@ -946,8 +946,12 @@ function site_word_counter_active_footer_part() {
 /**
  * Whether someone deleted the added line from a template in the Site Editor.
  *
- * WordPress records deleted hooked blocks in the saved template's
- * _wp_ignored_hooked_blocks meta, and won't add them again.
+ * WordPress records deleted hooked blocks in ignoredHookedBlocks, and won't
+ * add them again: on the anchor block when it's in the saved markup, like
+ * the footer's outermost group or Post Content, or in the saved template's
+ * _wp_ignored_hooked_blocks meta when the anchor is the template part
+ * itself. It records them there whenever the line was added, too, so the
+ * line only counts as deleted when the saved markup doesn't have it.
  *
  * @param string $template_id Template ID, such as "twentytwentyfive//footer".
  * @return bool
@@ -958,9 +962,29 @@ function site_word_counter_removed_in_editor( $template_id ) {
 		return false;
 	}
 
-	$ignored = json_decode( (string) get_post_meta( $template->wp_id, '_wp_ignored_hooked_blocks', true ), true );
+	$post = get_post( $template->wp_id );
+	if ( ! $post || site_word_counter_content_has_counter( $post->post_content ) ) {
+		return false;
+	}
 
-	return is_array( $ignored ) && in_array( SITE_WORD_COUNTER_BLOCK_NAME, $ignored, true );
+	$ignored = json_decode( (string) get_post_meta( $template->wp_id, '_wp_ignored_hooked_blocks', true ), true );
+	if ( is_array( $ignored ) && in_array( SITE_WORD_COUNTER_BLOCK_NAME, $ignored, true ) ) {
+		return true;
+	}
+
+	$stack = parse_blocks( $post->post_content );
+	while ( $stack ) {
+		$block   = array_shift( $stack );
+		$ignored = $block['attrs']['metadata']['ignoredHookedBlocks'] ?? array();
+		if ( is_array( $ignored ) && in_array( SITE_WORD_COUNTER_BLOCK_NAME, $ignored, true ) ) {
+			return true;
+		}
+		if ( ! empty( $block['innerBlocks'] ) ) {
+			array_push( $stack, ...$block['innerBlocks'] );
+		}
+	}
+
+	return false;
 }
 
 /**
