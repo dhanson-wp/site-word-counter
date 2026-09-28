@@ -39,6 +39,27 @@ function site_word_counter_enqueue_inline_count_format() {
 add_action( 'enqueue_block_editor_assets', 'site_word_counter_enqueue_inline_count_format' );
 
 /**
+ * Marks inline word counts with a faint dotted underline in the editor, so a
+ * live count stands apart from a number typed by hand. Visitors never see it.
+ *
+ * Styles added on enqueue_block_assets reach the editor's iframe canvas; the
+ * is_admin() check keeps them off the front end.
+ */
+function site_word_counter_enqueue_inline_count_editor_style() {
+	if ( ! is_admin() ) {
+		return;
+	}
+
+	wp_register_style( 'site-word-counter-inline-count-editor', false, array(), SITE_WORD_COUNTER_VERSION );
+	wp_enqueue_style( 'site-word-counter-inline-count-editor' );
+	wp_add_inline_style(
+		'site-word-counter-inline-count-editor',
+		'.' . SITE_WORD_COUNTER_INLINE_CLASS . '{text-decoration:underline dotted;text-decoration-thickness:1px;text-underline-offset:0.2em;text-decoration-color:color-mix(in srgb,currentColor 55%,transparent);}'
+	);
+}
+add_action( 'enqueue_block_assets', 'site_word_counter_enqueue_inline_count_editor_style' );
+
+/**
  * Swaps the saved number in each inline word count for the current total.
  *
  * @param string $block_content Rendered block HTML.
