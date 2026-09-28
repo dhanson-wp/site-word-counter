@@ -451,10 +451,55 @@ function site_word_counter_merge_text_attrs( $inherited, $own ) {
  * @return string Block markup.
  */
 function site_word_counter_footer_line_markup( $text_attrs = array() ) {
-	return '<!-- wp:group {"align":"full","style":{"spacing":{"padding":{"bottom":"1.5rem"}}},"layout":{"type":"constrained"}} -->'
-		. '<div class="wp-block-group alignfull" style="padding-bottom:1.5rem">'
-		. site_word_counter_line_markup( site_word_counter_footer_alignment(), $text_attrs )
-		. '</div><!-- /wp:group -->';
+	$attrs = array( 'align' => 'full' );
+	$style = '';
+
+	$spacing = site_word_counter_footer_spacing();
+	if ( $spacing ) {
+		$padding                              = array( 'bottom' => 'var:preset|spacing|' . $spacing );
+		$attrs['style']['spacing']['padding'] = $padding;
+		$styles                               = wp_style_engine_get_styles( array( 'spacing' => array( 'padding' => $padding ) ) );
+		$style                                = $styles['css'] ?? '';
+	}
+
+	$attrs['layout'] = array( 'type' => 'constrained' );
+
+	return get_comment_delimited_block_content(
+		'core/group',
+		$attrs,
+		'<div class="wp-block-group alignfull"' . ( $style ? ' style="' . esc_attr( $style ) . '"' : '' ) . '>'
+			. site_word_counter_line_markup( site_word_counter_footer_alignment(), $text_attrs )
+			. '</div>'
+	);
+}
+
+/**
+ * Picks the theme's spacing preset closest to 1.5rem, the room the line
+ * leaves below itself when it goes after the footer's content. Sizes are
+ * compared by their first length, so "clamp(1.5rem, 4vw, 2rem)" counts as
+ * 1.5rem.
+ *
+ * @return string Spacing preset slug, or an empty string when the site has
+ *                no spacing presets to pick from.
+ */
+function site_word_counter_footer_spacing() {
+	$best      = '';
+	$best_diff = null;
+
+	foreach ( site_word_counter_presets( array( 'spacing', 'spacingSizes' ), array( 'spacing', 'defaultSpacingSizes' ) ) as $slug => $preset ) {
+		if ( ! is_string( $preset['size'] ?? null ) || ! preg_match( '/(\d*\.?\d+)(px|rem|em)\b/', $preset['size'], $match ) ) {
+			continue;
+		}
+
+		$pixels = 'px' === $match[2] ? (float) $match[1] : (float) $match[1] * 16;
+		$diff   = abs( $pixels - 24 );
+		if ( null === $best_diff || $diff < $best_diff ) {
+			$best      = (string) $slug;
+			$best_diff = $diff;
+		}
+	}
+
+	return $best;
 }
 
 /**
