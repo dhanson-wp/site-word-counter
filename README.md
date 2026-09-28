@@ -18,6 +18,10 @@ By itself it's just a number, styled with the block editor's own typography, col
 - On block themes, adds "33,895 words published since 2019." to the footer or below each post with Block Hooks, with Preview and edit links to the Site Editor, plus two block patterns.
 - Filters and WP-CLI commands for developers.
 
+## Download
+
+[Download the latest release](https://github.com/dhanson-wp/site-word-counter/releases/latest/download/site-word-counter.zip), then upload it from **Plugins › Add New › Upload Plugin**.
+
 ## Requirements
 
 - WordPress 7.1 or later
