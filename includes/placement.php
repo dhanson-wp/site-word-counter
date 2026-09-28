@@ -1171,6 +1171,11 @@ function site_word_counter_removed_in_editor( $template_id ) {
 /**
  * Returns the Site Editor link and availability for each placement.
  *
+ * A placement that can't be used says why in "unavailable": "no_footer"
+ * when the theme has no footer-area template part, "footer_not_in_area"
+ * when it has a footer part that isn't in the footer area, and
+ * "no_single_template" when it has no single post template.
+ *
  * @return array[]
  */
 function site_word_counter_placement_targets() {
@@ -1179,11 +1184,18 @@ function site_word_counter_placement_targets() {
 		'footer'      => null,
 		'after_posts' => null,
 	);
+	$missing        = array(
+		'footer'      => 'no_footer',
+		'after_posts' => 'no_single_template',
+	);
 
 	if ( $is_block_theme ) {
 		$footer = site_word_counter_active_footer_part();
 		if ( $footer ) {
 			$targets['footer'] = array( 'wp_template_part', $footer->id );
+		} elseif ( get_block_template( get_stylesheet() . '//footer', 'wp_template_part' ) ) {
+			// Block Hooks only reach template parts in the footer area.
+			$missing['footer'] = 'footer_not_in_area';
 		}
 
 		foreach ( array( 'single-post', 'single' ) as $slug ) {
@@ -1200,6 +1212,7 @@ function site_word_counter_placement_targets() {
 		$result[] = array(
 			'id'              => $placement,
 			'enabled'         => (bool) $target,
+			'unavailable'     => $target ? null : $missing[ $placement ],
 			'removedInEditor' => $target ? site_word_counter_removed_in_editor( $target[1] ) : false,
 			'editUrl'         => $target
 				? add_query_arg(

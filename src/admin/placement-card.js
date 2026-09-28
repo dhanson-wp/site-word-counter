@@ -30,11 +30,29 @@ const COPY = {
 	},
 };
 
+const UNAVAILABLE = {
+	no_footer: __(
+		'Your theme doesn’t have a footer template part, so there’s no footer to add it to. You can add the “Words published since” pattern to any template in the Site Editor instead.',
+		'site-word-counter'
+	),
+	footer_not_in_area: __(
+		'Your theme’s footer template part isn’t set as a footer area, so the word count can’t be added to it for you. Add the “Words published since” pattern to it in the Site Editor instead.',
+		'site-word-counter'
+	),
+	no_single_template: __(
+		'Your theme doesn’t have a single post template, so the word count can’t be added after your posts for you.',
+		'site-word-counter'
+	),
+};
+
 function placementDescription( placement ) {
 	if ( ! placement.enabled ) {
-		return __(
-			'Your theme doesn’t have this template.',
-			'site-word-counter'
+		return (
+			UNAVAILABLE[ placement.unavailable ] ??
+			__(
+				'Your theme doesn’t have a template for this, so the word count can’t be added here for you.',
+				'site-word-counter'
+			)
 		);
 	}
 	if ( placement.removedInEditor ) {
