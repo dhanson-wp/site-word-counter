@@ -249,6 +249,19 @@ Added after the first ten stories, on the `feature/placement` branch. The settin
 
 **Check:** on Twenty Twenty-Five, turning on Footer adds the line with 34 and the first post's year to every page's footer, and turning it off removes it. Below posts adds it after single posts only, not pages. The line shows in the Site Editor's footer; deleting it there and saving keeps it gone. A footer that already has a counter gets no second one. On a classic theme, the card shows the explanation and nothing is inserted. Both patterns are registered. The tiles work with the keyboard alone. Checks pass on 7.1 with Ipsum and Twenty Twenty-Five.
 
+### 12. Inline word count (1.1.0)
+
+Added on the `feat/inline-word-count` branch, at Derek's call. The live total inside a sentence, looking like the rest of the text: "The day I shared it, it said 23,004. Today it says 37,051." Only the second number stays current.
+
+- **Format.** `site-word-counter/inline-count`, registered with `registerFormatType` in `src/inline-count/index.js`, its own script entry (`compiled/inline-count/`) enqueued on `enqueue_block_editor_assets`, so it loads in the post editor, the Site Editor, and the widgets editor whether or not a counter block is around.
+- **Toolbar.** A `RichTextToolbarButton` titled "Word count" with the tally icon, in the rich text toolbar's More menu next to Highlight and Inline code. It shows wherever a core rich text field allows formats: paragraphs, headings, list items, quotes and citations, and image captions.
+- **Markup.** `<span class="site-word-counter-inline">37,051</span>`, holding the full, localized total at insert time, so the sentence still reads fine if the plugin is turned off.
+- **An object, not a wrapper.** The format sets `contentEditable: false` and is inserted with `insertObject`, the way core's footnotes are, so the count is one uneditable piece: nobody can type inside it and lose their words when the front end swaps the text. Choosing Word count with the count selected turns it back into plain text, the same as removing any other format. Selected text is replaced by the count.
+- **Front end.** A `render_block` filter checks for the class with `str_contains`, then walks the HTML with `WP_HTML_Tag_Processor` and swaps the first text inside each marker for `site_word_counter_format_number( site_word_counter_get_total(), 'full' )` with `set_modifiable_text()`, clearing any other text inside it. No animation. Feeds, the REST API, and generated excerpts run blocks through `render_block`, so they show the live number too.
+- **Editor.** The editor shows the number saved at insert time. Opening a post never changes its content.
+
+**Check:** insert the count in a paragraph, heading, list item, quote, citation, and image caption; save; every block is valid on reload and the post isn't dirty. The front end shows the live total in the surrounding text's font and color, follows `?swc_total=` and `?swc_de=1`, and goes up after publishing a new post. With the plugin deactivated, the saved number shows as plain text.
+
 ## Test site
 
 - Studio site: `~/Studio/site-word-counter`, http://localhost:8918. Run WP-CLI from that folder as `studio wp …`.
