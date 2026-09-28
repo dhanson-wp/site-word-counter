@@ -134,10 +134,23 @@ function site_word_counter_line_markup( $align = '', $text_attrs = array() ) {
 		$row_attrs['layout']['justifyContent'] = $text_align;
 	}
 
+	// The Row takes the text's size too, so the gap between the count and the
+	// words scales with it.
+	$row_style = '';
+	if ( ! empty( $text_attrs['fontSize'] ) ) {
+		$row_attrs['fontSize'] = $text_attrs['fontSize'];
+		$row_class            .= ' has-' . _wp_to_kebab_case( $text_attrs['fontSize'] ) . '-font-size';
+	} elseif ( ! empty( $text_attrs['style']['typography']['fontSize'] ) ) {
+		$row_attrs['style']['typography']['fontSize'] = $text_attrs['style']['typography']['fontSize'];
+
+		$styles    = wp_style_engine_get_styles( array( 'typography' => array( 'fontSize' => $text_attrs['style']['typography']['fontSize'] ) ) );
+		$row_style = $styles['css'] ?? '';
+	}
+
 	return get_comment_delimited_block_content(
 		'core/group',
 		$row_attrs,
-		'<div class="' . esc_attr( $row_class ) . '">'
+		'<div class="' . esc_attr( $row_class ) . '"' . ( $row_style ? ' style="' . esc_attr( $row_style ) . '"' : '' ) . '>'
 			. get_comment_delimited_block_content( SITE_WORD_COUNTER_BLOCK_NAME, site_word_counter_counter_text_attrs( $text_attrs ), '' )
 			. site_word_counter_paragraph_markup( $text, $text_attrs )
 			. '</div>'
@@ -564,22 +577,42 @@ function site_word_counter_content_has_counter( $content ) {
 /**
  * Works out which placement, if any, a Block Hooks anchor is.
  *
+ * The footer line goes inside the footer's outermost group, as its last
+ * child, so it takes the footer's layout, padding, and spacing. Block Hooks
+ * can't tell that group from the ones inside it, so this accepts the last
+ * child of any group in the footer, and site_word_counter_hooked_block()
+ * drops the ones that aren't the outermost. A footer that isn't a single
+ * group gets the line after its content instead.
+ *
  * @param string                          $relative_position Relative position.
  * @param string                          $anchor_block_type Anchor block type.
  * @param WP_Block_Template|WP_Post|array $context           Template, part, post, or pattern.
  * @return string|null "footer", "after_posts", or null.
  */
 function site_word_counter_match_placement( $relative_position, $anchor_block_type, $context ) {
-	// Themes like Ipsum build the single template from a pattern, and Block
-	// Hooks then run with the pattern as the context.
-	if (
-		is_array( $context )
-		&& 'after' === $relative_position
-		&& 'core/post-content' === $anchor_block_type
-		&& isset( $context['slug'] )
-		&& in_array( $context['slug'], site_word_counter_single_template_patterns(), true )
-	) {
-		return 'after_posts';
+	if ( is_array( $context ) ) {
+		$slug = $context['name'] ?? ( $context['slug'] ?? '' );
+
+		// Themes like Ipsum and Twenty Twenty-Five build the footer part from a
+		// pattern, and Block Hooks then run with the pattern as the context.
+		if (
+			'last_child' === $relative_position
+			&& 'core/group' === $anchor_block_type
+			&& in_array( $slug, site_word_counter_footer_patterns(), true )
+		) {
+			return 'footer';
+		}
+
+		// Themes like Ipsum build the single template from a pattern, too.
+		if (
+			'after' === $relative_position
+			&& 'core/post-content' === $anchor_block_type
+			&& in_array( $slug, site_word_counter_single_template_patterns(), true )
+		) {
+			return 'after_posts';
+		}
+
+		return null;
 	}
 
 	if ( ! $context instanceof WP_Block_Template ) {
@@ -588,11 +621,19 @@ function site_word_counter_match_placement( $relative_position, $anchor_block_ty
 
 	if (
 		'last_child' === $relative_position
-		&& 'core/template-part' === $anchor_block_type
+		&& in_array( $anchor_block_type, array( 'core/group', 'core/template-part' ), true )
 		&& 'wp_template_part' === $context->type
 		&& 'footer' === $context->area
 	) {
-		return 'footer';
+		$anchor = site_word_counter_footer_anchor( $context->content );
+		if (
+			( 'group' === $anchor && 'core/group' === $anchor_block_type )
+			|| ( 'part' === $anchor && 'core/template-part' === $anchor_block_type )
+		) {
+			return 'footer';
+		}
+
+		return null;
 	}
 
 	if (
@@ -605,6 +646,155 @@ function site_word_counter_match_placement( $relative_position, $anchor_block_ty
 	}
 
 	return null;
+}
+
+/**
+ * Returns the footer's outermost group, when the footer is a single group.
+ *
+ * @param string $content Block markup of a footer part or pattern.
+ * @return array|null Parsed block.
+ */
+function site_word_counter_footer_group( $content ) {
+	$named = array();
+	foreach ( parse_blocks( (string) $content ) as $block ) {
+		if ( ! empty( $block['blockName'] ) ) {
+			$named[] = $block;
+		}
+	}
+
+	return 1 === count( $named ) && 'core/group' === $named[0]['blockName'] ? $named[0] : null;
+}
+
+/**
+ * Works out where the line goes in a footer part.
+ *
+ * @param string $content Block markup of the footer part.
+ * @return string "group" for the last child of the part's outermost group,
+ *                "pattern" when the part is a pattern whose outermost group
+ *                takes it, or "part" for after the part's content.
+ */
+function site_word_counter_footer_anchor( $content ) {
+	static $cache = array();
+
+	$key = md5( (string) $content );
+	if ( isset( $cache[ $key ] ) ) {
+		return $cache[ $key ];
+	}
+
+	$anchor = 'part';
+	if ( site_word_counter_footer_group( $content ) ) {
+		$anchor = 'group';
+	} else {
+		$slug = site_word_counter_footer_pattern_slug( $content );
+		if ( $slug && site_word_counter_footer_group( site_word_counter_pattern_content( $slug ) ) ) {
+			$anchor = 'pattern';
+		}
+	}
+
+	$cache[ $key ] = $anchor;
+
+	return $anchor;
+}
+
+/**
+ * Returns the pattern a footer part is built from, when the part is a single
+ * Pattern block.
+ *
+ * @param string $content Block markup of the footer part.
+ * @return string Pattern slug, or an empty string.
+ */
+function site_word_counter_footer_pattern_slug( $content ) {
+	$named = array();
+	foreach ( parse_blocks( (string) $content ) as $block ) {
+		if ( ! empty( $block['blockName'] ) ) {
+			$named[] = $block;
+		}
+	}
+
+	if ( 1 === count( $named ) && 'core/pattern' === $named[0]['blockName'] ) {
+		return (string) ( $named[0]['attrs']['slug'] ?? '' );
+	}
+
+	return '';
+}
+
+/**
+ * Returns the slug of the pattern the active footer part is built from, if
+ * the line goes in that pattern.
+ *
+ * @return string[]
+ */
+function site_word_counter_footer_patterns() {
+	static $slugs = null;
+	if ( null !== $slugs ) {
+		return $slugs;
+	}
+
+	$slugs = array();
+
+	$was_paused = site_word_counter_hooks_paused();
+	site_word_counter_hooks_paused( true );
+	$part = site_word_counter_active_footer_part();
+	site_word_counter_hooks_paused( $was_paused );
+
+	if ( $part && 'pattern' === site_word_counter_footer_anchor( $part->content ) ) {
+		$slugs[] = site_word_counter_footer_pattern_slug( $part->content );
+	}
+
+	return $slugs;
+}
+
+/**
+ * Returns the markup Block Hooks is working on, for a template, part, post,
+ * or pattern.
+ *
+ * @param WP_Block_Template|WP_Post|array $context Template, part, post, or pattern.
+ * @return string Block markup.
+ */
+function site_word_counter_context_content( $context ) {
+	if ( is_array( $context ) ) {
+		if ( isset( $context['content'] ) ) {
+			return (string) $context['content'];
+		}
+
+		// Theme patterns load their content the first time they're used.
+		return site_word_counter_pattern_content( $context['name'] ?? ( $context['slug'] ?? '' ) );
+	}
+
+	if ( $context instanceof WP_Post ) {
+		return (string) $context->post_content;
+	}
+
+	return (string) ( $context->content ?? '' );
+}
+
+/**
+ * Whether a Block Hooks anchor is the footer's outermost group.
+ *
+ * WordPress may have added ignoredHookedBlocks to the anchor while it
+ * worked, so that's left out of the comparison.
+ *
+ * @param array  $anchor  Parsed anchor block.
+ * @param string $content Block markup of the footer part or pattern.
+ * @return bool
+ */
+function site_word_counter_is_footer_group( $anchor, $content ) {
+	$group = site_word_counter_footer_group( $content );
+	if ( ! $group ) {
+		return false;
+	}
+
+	$without_ignored = static function ( $attrs ) {
+		unset( $attrs['metadata']['ignoredHookedBlocks'] );
+		if ( isset( $attrs['metadata'] ) && ! $attrs['metadata'] ) {
+			unset( $attrs['metadata'] );
+		}
+		return $attrs;
+	};
+
+	return ( $anchor['blockName'] ?? '' ) === $group['blockName']
+		&& ( $anchor['innerHTML'] ?? '' ) === $group['innerHTML']
+		&& $without_ignored( $anchor['attrs'] ?? array() ) == $without_ignored( $group['attrs'] ); // phpcs:ignore Universal.Operators.StrictComparisons.LooseEqual -- Attribute order can differ.
 }
 
 /**
@@ -651,12 +841,16 @@ function site_word_counter_single_template_patterns() {
  * @return string[]
  */
 function site_word_counter_hooked_block_types( $hooked_block_types, $relative_position, $anchor_block_type, $context ) {
+	if ( site_word_counter_hooks_paused() || ! get_option( 'site_word_counter_placements' ) ) {
+		return $hooked_block_types;
+	}
+
 	$placement = site_word_counter_match_placement( $relative_position, $anchor_block_type, $context );
 
 	if (
 		$placement
 		&& site_word_counter_placement_enabled( $placement )
-		&& ! site_word_counter_content_has_counter( is_array( $context ) ? ( $context['content'] ?? '' ) : $context->content )
+		&& ! site_word_counter_content_has_counter( site_word_counter_context_content( $context ) )
 	) {
 		$hooked_block_types[] = SITE_WORD_COUNTER_BLOCK_NAME;
 	}
@@ -668,6 +862,7 @@ add_filter( 'hooked_block_types', 'site_word_counter_hooked_block_types', 10, 4 
 /**
  * Swaps the bare counter for the "words published since" line.
  *
+ * In the footer, the line takes the text style of the footer's last line.
  * WordPress still records the original block name in ignoredHookedBlocks, so
  * a line deleted in the Site Editor stays deleted.
  *
@@ -679,8 +874,8 @@ add_filter( 'hooked_block_types', 'site_word_counter_hooked_block_types', 10, 4 
  * @return array|null
  */
 function site_word_counter_hooked_block( $parsed_hooked_block, $hooked_block_type, $relative_position, $parsed_anchor_block, $context ) {
-	if ( null === $parsed_hooked_block ) {
-		return null;
+	if ( null === $parsed_hooked_block || site_word_counter_hooks_paused() ) {
+		return $parsed_hooked_block;
 	}
 
 	$placement = site_word_counter_match_placement( $relative_position, $parsed_anchor_block['blockName'] ?? '', $context );
@@ -688,7 +883,18 @@ function site_word_counter_hooked_block( $parsed_hooked_block, $hooked_block_typ
 		return $parsed_hooked_block;
 	}
 
-	if ( 'footer' === $placement ) {
+	if ( 'footer' === $placement && 'core/group' === $parsed_anchor_block['blockName'] ) {
+		// Only the footer's outermost group takes the line. Returning null also
+		// keeps WordPress from marking the other groups as having ignored it.
+		if ( ! site_word_counter_is_footer_group( $parsed_anchor_block, site_word_counter_context_content( $context ) ) ) {
+			return null;
+		}
+
+		$markup = site_word_counter_line_markup(
+			site_word_counter_children_alignment( $parsed_anchor_block ),
+			site_word_counter_text_attrs( $parsed_anchor_block['innerBlocks'] )
+		);
+	} elseif ( 'footer' === $placement ) {
 		$markup = site_word_counter_footer_line_markup( site_word_counter_text_attrs( $parsed_anchor_block['innerBlocks'] ?? array() ) );
 	} else {
 		$markup = site_word_counter_line_markup();
