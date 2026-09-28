@@ -4,7 +4,7 @@ Tags:              word count, block, statistics, writing, blogging
 Requires at least: 7.1
 Tested up to:      7.1
 Requires PHP:      7.4
-Stable tag:        1.0.1
+Stable tag:        1.0.2
 License:           GPLv2 or later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -101,6 +101,9 @@ No. Counters made with that version keep working. In the editor they show your n
 4. Settings › Word Counter: choose what counts, and add the word count to your footer or below each post.
 
 == Changelog ==
+
+= 1.0.2 =
+* The footer line now matches your theme. It sits inside the footer, right under its last line, and uses the same text size, color, and font as the rest of the footer.
 
 = 1.0.1 =
 * The README now links straight to the latest release, so you can download the plugin without digging through GitHub.
