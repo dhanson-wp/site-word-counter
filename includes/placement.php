@@ -444,13 +444,17 @@ function site_word_counter_merge_text_attrs( $inherited, $own ) {
 }
 
 /**
- * The footer version of the line: a full-width group that takes the theme's
- * page padding, so the line lines up with the footer content above it.
+ * The footer version of the line, for when it goes after the footer part's
+ * content instead of inside its outermost group: a full-width group that
+ * takes the theme's page padding, so the line lines up with the footer
+ * content above it.
  *
- * @param array $text_attrs Text attributes, from site_word_counter_text_attrs().
+ * @param array  $text_attrs Text attributes, from site_word_counter_text_attrs().
+ * @param string $align      Block alignment for the Row, from
+ *                           site_word_counter_blocks_alignment().
  * @return string Block markup.
  */
-function site_word_counter_footer_line_markup( $text_attrs = array() ) {
+function site_word_counter_footer_line_markup( $text_attrs = array(), $align = '' ) {
 	$attrs = array( 'align' => 'full' );
 	$style = '';
 
@@ -468,7 +472,7 @@ function site_word_counter_footer_line_markup( $text_attrs = array() ) {
 		'core/group',
 		$attrs,
 		'<div class="wp-block-group alignfull"' . ( $style ? ' style="' . esc_attr( $style ) . '"' : '' ) . '>'
-			. site_word_counter_line_markup( site_word_counter_footer_alignment(), $text_attrs )
+			. site_word_counter_line_markup( $align, $text_attrs )
 			. '</div>'
 	);
 }
@@ -506,30 +510,17 @@ function site_word_counter_footer_spacing() {
  * Matches the footer's own content width: "wide" when the footer lays its
  * content out wide (Twenty Twenty-Five), otherwise the content column (Ipsum).
  *
+ * @param array[] $blocks The footer part's parsed blocks.
  * @return string "wide" or "".
  */
-function site_word_counter_footer_alignment() {
-	static $align = null;
-	if ( null !== $align ) {
-		return $align;
-	}
-
-	$align = '';
-	$part  = site_word_counter_active_footer_part();
-	if ( ! $part ) {
-		return $align;
-	}
-
-	$blocks = site_word_counter_expand_patterns( parse_blocks( $part->content ) );
-	foreach ( $blocks as $block ) {
-		if ( empty( $block['blockName'] ) ) {
-			continue;
+function site_word_counter_blocks_alignment( $blocks ) {
+	foreach ( site_word_counter_expand_patterns( $blocks ) as $block ) {
+		if ( ! empty( $block['blockName'] ) ) {
+			return site_word_counter_children_alignment( $block );
 		}
-		$align = site_word_counter_children_alignment( $block );
-		break;
 	}
 
-	return $align;
+	return '';
 }
 
 /**
@@ -668,8 +659,9 @@ function site_word_counter_content_has_counter( $content ) {
  * child, so it takes the footer's layout, padding, and spacing. Block Hooks
  * can't tell that group from the ones inside it, so this accepts the last
  * child of any group in the footer, and site_word_counter_hooked_block()
- * drops the ones that aren't the outermost. A footer that isn't a single
- * group gets the line after its content instead.
+ * drops the ones that aren't the outermost. It also accepts the last child
+ * of the footer part itself, where site_word_counter_hooked_block() adds the
+ * line only when no group will, such as a footer that isn't a single group.
  *
  * @param string                          $relative_position Relative position.
  * @param string                          $anchor_block_type Anchor block type.
@@ -708,14 +700,12 @@ function site_word_counter_match_placement( $relative_position, $anchor_block_ty
 
 	if (
 		'last_child' === $relative_position
-		&& in_array( $anchor_block_type, array( 'core/group', 'core/template-part' ), true )
 		&& 'wp_template_part' === $context->type
 		&& 'footer' === $context->area
 	) {
-		$anchor = site_word_counter_footer_anchor( $context->content );
 		if (
-			( 'group' === $anchor && 'core/group' === $anchor_block_type )
-			|| ( 'part' === $anchor && 'core/template-part' === $anchor_block_type )
+			'core/template-part' === $anchor_block_type
+			|| ( 'core/group' === $anchor_block_type && '' !== site_word_counter_footer_group_signature( $context->content ) )
 		) {
 			return 'footer';
 		}
@@ -753,37 +743,6 @@ function site_word_counter_footer_group( $content ) {
 }
 
 /**
- * Works out where the line goes in a footer part.
- *
- * @param string $content Block markup of the footer part.
- * @return string "group" for the last child of the part's outermost group,
- *                "pattern" when the part is a pattern whose outermost group
- *                takes it, or "part" for after the part's content.
- */
-function site_word_counter_footer_anchor( $content ) {
-	static $cache = array();
-
-	$key = md5( (string) $content );
-	if ( isset( $cache[ $key ] ) ) {
-		return $cache[ $key ];
-	}
-
-	$anchor = 'part';
-	if ( site_word_counter_footer_group( $content ) ) {
-		$anchor = 'group';
-	} else {
-		$slug = site_word_counter_footer_pattern_slug( $content );
-		if ( $slug && site_word_counter_footer_group( site_word_counter_pattern_content( $slug ) ) ) {
-			$anchor = 'pattern';
-		}
-	}
-
-	$cache[ $key ] = $anchor;
-
-	return $anchor;
-}
-
-/**
  * Returns the pattern a footer part is built from, when the part is a single
  * Pattern block.
  *
@@ -806,8 +765,8 @@ function site_word_counter_footer_pattern_slug( $content ) {
 }
 
 /**
- * Returns the slug of the pattern the active footer part is built from, if
- * the line goes in that pattern.
+ * Returns the slug of the pattern the active footer part is built from, when
+ * the line goes in that pattern's outermost group.
  *
  * @return string[]
  */
@@ -824,8 +783,9 @@ function site_word_counter_footer_patterns() {
 	$part = site_word_counter_active_footer_part();
 	site_word_counter_hooks_paused( $was_paused );
 
-	if ( $part && 'pattern' === site_word_counter_footer_anchor( $part->content ) ) {
-		$slugs[] = site_word_counter_footer_pattern_slug( $part->content );
+	$slug = $part ? site_word_counter_footer_pattern_slug( $part->content ) : '';
+	if ( $slug && '' !== site_word_counter_footer_group_signature( site_word_counter_pattern_content( $slug ) ) ) {
+		$slugs[] = $slug;
 	}
 
 	return $slugs;
@@ -856,32 +816,164 @@ function site_word_counter_context_content( $context ) {
 }
 
 /**
- * Whether a Block Hooks anchor is the footer's outermost group.
+ * A fingerprint of a block that ignores what can change between two parses
+ * of the same markup: the metadata WordPress adds while it works, such as
+ * ignoredHookedBlocks, the order of attributes, and whitespace.
  *
- * WordPress may have added ignoredHookedBlocks to the anchor while it
- * worked, so that's left out of the comparison.
+ * @param array $block Parsed block.
+ * @return string
+ */
+function site_word_counter_block_signature( $block ) {
+	$attrs = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
+	unset( $attrs['metadata'] );
+
+	return (string) wp_json_encode(
+		array(
+			(string) ( $block['blockName'] ?? '' ),
+			site_word_counter_sort_keys( $attrs ),
+			trim( (string) preg_replace( array( '/>\s+</', '/\s+/' ), array( '><', ' ' ), (string) ( $block['innerHTML'] ?? '' ) ) ),
+		)
+	);
+}
+
+/**
+ * Sorts an array's keys, all the way down, leaving lists in order.
+ *
+ * @param mixed $value Value.
+ * @return mixed
+ */
+function site_word_counter_sort_keys( $value ) {
+	if ( ! is_array( $value ) ) {
+		return $value;
+	}
+	if ( ! wp_is_numeric_array( $value ) ) {
+		ksort( $value );
+	}
+
+	return array_map( 'site_word_counter_sort_keys', $value );
+}
+
+/**
+ * Returns the fingerprint of the footer's outermost group, when that group
+ * can take the line.
+ *
+ * It can when the footer is a single group with blocks inside it (Block
+ * Hooks only offers the last child of a block that has children), and no
+ * group inside it has the same fingerprint, so it's the only group that can
+ * match. Otherwise the line goes after the footer part's content.
+ *
+ * @param string $content Block markup of a footer part or pattern.
+ * @return string Fingerprint, or an empty string.
+ */
+function site_word_counter_footer_group_signature( $content ) {
+	static $cache = array();
+
+	$key = md5( (string) $content );
+	if ( isset( $cache[ $key ] ) ) {
+		return $cache[ $key ];
+	}
+
+	$signature = '';
+	$group     = site_word_counter_footer_group( $content );
+	if ( $group && ! empty( $group['innerBlocks'] ) ) {
+		$signature = site_word_counter_block_signature( $group );
+
+		$stack = $group['innerBlocks'];
+		while ( $stack ) {
+			$block = array_shift( $stack );
+			if ( site_word_counter_block_signature( $block ) === $signature ) {
+				$signature = '';
+				break;
+			}
+			if ( ! empty( $block['innerBlocks'] ) ) {
+				array_push( $stack, ...$block['innerBlocks'] );
+			}
+		}
+	}
+
+	$cache[ $key ] = $signature;
+
+	return $signature;
+}
+
+/**
+ * Whether a Block Hooks anchor is the footer's outermost group.
  *
  * @param array  $anchor  Parsed anchor block.
  * @param string $content Block markup of the footer part or pattern.
  * @return bool
  */
 function site_word_counter_is_footer_group( $anchor, $content ) {
-	$group = site_word_counter_footer_group( $content );
-	if ( ! $group ) {
+	if ( 'core/group' !== ( $anchor['blockName'] ?? '' ) || empty( $anchor['innerBlocks'] ) ) {
 		return false;
 	}
 
-	$without_ignored = static function ( $attrs ) {
-		unset( $attrs['metadata']['ignoredHookedBlocks'] );
-		if ( isset( $attrs['metadata'] ) && ! $attrs['metadata'] ) {
-			unset( $attrs['metadata'] );
-		}
-		return $attrs;
-	};
+	$signature = site_word_counter_footer_group_signature( $content );
 
-	return ( $anchor['blockName'] ?? '' ) === $group['blockName']
-		&& ( $anchor['innerHTML'] ?? '' ) === $group['innerHTML']
-		&& $without_ignored( $anchor['attrs'] ?? array() ) == $without_ignored( $group['attrs'] ); // phpcs:ignore Universal.Operators.StrictComparisons.LooseEqual -- Attribute order can differ.
+	return '' !== $signature && site_word_counter_block_signature( $anchor ) === $signature;
+}
+
+/**
+ * Whether the footer's outermost group, or the outermost group of the
+ * pattern the footer is built from, takes the line.
+ *
+ * Block Hooks offers the footer part's last child before the last child of
+ * any group inside it, so the part asks this first. It runs the same check
+ * on the same blocks the group is checked with later, so exactly one of
+ * them adds the line: the group when it matches, and the part when it
+ * doesn't.
+ *
+ * @param array[] $blocks  The footer part's parsed blocks.
+ * @param string  $content Block markup of the footer part.
+ * @return bool
+ */
+function site_word_counter_group_takes_footer_line( $blocks, $content ) {
+	$named = array();
+	foreach ( $blocks as $block ) {
+		if ( ! empty( $block['blockName'] ) ) {
+			$named[] = $block;
+		}
+	}
+	if ( 1 !== count( $named ) ) {
+		return false;
+	}
+
+	if ( 'core/group' === $named[0]['blockName'] ) {
+		return site_word_counter_is_footer_group( $named[0], $content );
+	}
+
+	$slug = (string) ( $named[0]['attrs']['slug'] ?? '' );
+	if ( 'core/pattern' !== $named[0]['blockName'] || ! in_array( $slug, site_word_counter_footer_patterns(), true ) ) {
+		return false;
+	}
+
+	$pattern = site_word_counter_pattern_content( $slug );
+	$group   = site_word_counter_footer_group( $pattern );
+
+	return $group && site_word_counter_is_footer_group( $group, $pattern );
+}
+
+/**
+ * Whether any block has the counter in its ignoredHookedBlocks, which is
+ * how WordPress remembers a line someone deleted in the Site Editor.
+ *
+ * @param array[] $blocks Parsed blocks.
+ * @return bool
+ */
+function site_word_counter_blocks_ignore_counter( $blocks ) {
+	$stack = $blocks;
+	while ( $stack ) {
+		$block   = array_shift( $stack );
+		$ignored = $block['attrs']['metadata']['ignoredHookedBlocks'] ?? array();
+		if ( is_array( $ignored ) && in_array( SITE_WORD_COUNTER_BLOCK_NAME, $ignored, true ) ) {
+			return true;
+		}
+		if ( ! empty( $block['innerBlocks'] ) ) {
+			array_push( $stack, ...$block['innerBlocks'] );
+		}
+	}
+
+	return false;
 }
 
 /**
@@ -982,7 +1074,21 @@ function site_word_counter_hooked_block( $parsed_hooked_block, $hooked_block_typ
 			site_word_counter_text_attrs( $parsed_anchor_block['innerBlocks'] )
 		);
 	} elseif ( 'footer' === $placement ) {
-		$markup = site_word_counter_footer_line_markup( site_word_counter_text_attrs( $parsed_anchor_block['innerBlocks'] ?? array() ) );
+		// The part itself takes the line only when its outermost group won't,
+		// and not when a line was deleted from that group or is already there.
+		$blocks = $parsed_anchor_block['innerBlocks'] ?? array();
+		if (
+			site_word_counter_group_takes_footer_line( $blocks, site_word_counter_context_content( $context ) )
+			|| site_word_counter_blocks_ignore_counter( $blocks )
+			|| site_word_counter_content_has_counter( serialize_blocks( site_word_counter_expand_patterns( $blocks ) ) )
+		) {
+			return null;
+		}
+
+		$markup = site_word_counter_footer_line_markup(
+			site_word_counter_text_attrs( $blocks ),
+			site_word_counter_blocks_alignment( $blocks )
+		);
 	} else {
 		$markup = site_word_counter_line_markup();
 	}
@@ -1059,19 +1165,7 @@ function site_word_counter_removed_in_editor( $template_id ) {
 		return true;
 	}
 
-	$stack = parse_blocks( $post->post_content );
-	while ( $stack ) {
-		$block   = array_shift( $stack );
-		$ignored = $block['attrs']['metadata']['ignoredHookedBlocks'] ?? array();
-		if ( is_array( $ignored ) && in_array( SITE_WORD_COUNTER_BLOCK_NAME, $ignored, true ) ) {
-			return true;
-		}
-		if ( ! empty( $block['innerBlocks'] ) ) {
-			array_push( $stack, ...$block['innerBlocks'] );
-		}
-	}
-
-	return false;
+	return site_word_counter_blocks_ignore_counter( parse_blocks( $post->post_content ) );
 }
 
 /**
