@@ -1,6 +1,6 @@
 /**
- * The @wordpress/scripts default config, plus the settings screen and the
- * front-end view module entries.
+ * The @wordpress/scripts default config, plus the settings screen, the inline
+ * word count format, and the front-end view module entries.
  */
 const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
 
@@ -20,6 +20,9 @@ const withEntries = ( config, entries ) => ( {
 // counter animates, so it's its own module entry rather than a block.json
 // viewScriptModule.
 module.exports = [
-	withEntries( defaultConfig[ 0 ], { 'admin/index': './src/admin/index.js' } ),
+	withEntries( defaultConfig[ 0 ], {
+		'admin/index': './src/admin/index.js',
+		'inline-count/index': './src/inline-count/index.js',
+	} ),
 	withEntries( defaultConfig[ 1 ], { view: './src/view.js' } ),
 ];
